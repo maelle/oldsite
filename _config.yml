@@ -5,9 +5,9 @@ highlighter:      rouge
 permalink:        pretty
 
 # Setup
-title:            Maëlle Salmon
-tagline:          'A Jekyll theme'
-description:      'A statistician currently trying to build her webpage with Jekyll.'
+title:            Maëlle
+tagline:          'Not a fish'
+description:      ''
 url:              http://masalmon.github.io
 baseurl:          /
 
