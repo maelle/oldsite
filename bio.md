@@ -23,7 +23,7 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 * Since 2012, __PhD student in Statistics__, Ludwig-Maximilian Universität, Munich, Germany. Thesis submitted in March 2016 (see illustration below).
 
-<img src="/assets/gestation.gif" alt="gestation" width="300">
+<img src="{{base.url}}/assets/gestation.gif" alt="gestation" width="300">
 
 * 2012, __Master of Public Health__, École Pasteur-Cnam de santé publique (Institut Pasteur, Cnam), Paris, France.
 
@@ -37,13 +37,13 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 * I'm fluent in the [R](https://www.r-project.org/) statistical programming language. I've written many documents with LaTeX, including a [book](http://www.editions-ellipses.fr/product_info.php?products_id=7159) and my PhD thesis. I built this website with [Jekyll](https://jekyllrb.com/) using [this article](http://www.njtierney.com/jekyll/2015/11/11/how-i-built-my-site/). I master googling and copy-pasting from [Stackoverflow](http://stackoverflow.com/) and I'm frustration-resistant. Besides, I'm fond of data surfing.
 
-<img src="/assets/video.gif" alt="video" width="300">
+<img src="{{base.url}}/assets/video.gif" alt="video" width="300">
 
 * My mother tongue is French. I've learnt Spanish. I've learnt Italian too but don't practice much so I mostly only understand it. I'm currently learning Catalan. I also speak English, German, Swedish and I know a bit of Dutch.  
 
 ## Personal
 
-<img src="/assets/aurayvannes.PNG" alt="gestation" width="300">
+<img src="{{base.url}}/assets/aurayvannes.PNG" alt="gestation" width="300">
 
 I like running and other sports that don't challenge my coordination too much. Running makes me red and happy.
 
