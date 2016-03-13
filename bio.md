@@ -40,3 +40,12 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 <img src="/assets/video.gif" alt="video" width="300">
 
 * My mother tongue is French. I've learnt Spanish. I've learnt Italian too but don't practice much so I mostly only understand it. I'm currently learning Catalan. I also speak English, German, Swedish and I know a bit of Dutch.  
+
+## Personal
+
+<img src="/assets/aurayvannes.PNG" alt="gestation" width="300">
+
+I like running and other sports that don't challenge my coordination too much. Running makes me red and happy.
+
+My [spouse](http://dacornu.github.io/) and I would define ourselves as feminists but somehow ended up taking (and enjoying!) salsa lessons here in Barcelona, which gives us very traditional roles. 
+
