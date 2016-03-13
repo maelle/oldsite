@@ -43,7 +43,7 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 ## Personal
 <img src="{{base.url}}/assets/aurayvannes.png" alt="aurayvannes" style="float: left; width: 30%; margin-right: 5%; margin-bottom: 0.5em;">
-<img src="{{base.url}}/assets/corrida.jpg" alt="corrida" style="float: left; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">
+<img src="{{base.url}}/assets/corrida.jpg" alt="corrida" style="float: left; width: 34%; margin-right: 1%; margin-bottom: 0.5em;">
 <p style="clear: both;">
 </p>
 I like running and other sports that don't challenge my coordination too much. Running makes me red and happy.
