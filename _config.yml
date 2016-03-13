@@ -21,6 +21,16 @@ gems:
   - jekyll-paginate
   - redcarpet
   - jekyll-gist
+  - font-awesome-less
 
 github:
   repo:           https://github.com/masalmon
+
+twitter_username:     ma_salmon
+github_username:      masalmon
+linkedin_username:    
+google_plus_username: 
+facebook_username:    
+dribbble_username:
+researchgate_username: Maelle_Salmon
+mailto: maelle.salmon@yahoo.se

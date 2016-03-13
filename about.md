@@ -5,7 +5,7 @@ title: About
 
 Hej! 
 
-My name is Salmon, like the fish, and my first name, Maëlle, is derived from a Celtic word that means princess or chief. It's pronounced "Ma-El" as "ma" in "macaroni" and as the Spanish "El". The accent on the e in ë doesn't change the pronounciation, so I guess it's my crown.
+My last name is Salmon, like the fish, and my first name, Maëlle, is derived from a Celtic word that means princess or chief. It's pronounced "Ma-El" as "ma" in "macaroni" and as the Spanish "El". The accent on the e in ë doesn't change the pronounciation, so I guess it's my crown.
 
 Science took me places in Europe. 
 {% include map.html %}

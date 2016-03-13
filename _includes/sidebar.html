@@ -27,7 +27,38 @@
       {% endfor %}
 
     </nav>
+{% if site.twitter_username %}
+  <li>
+    <a href="https://twitter.com/{{ site.twitter_username }}">
+      <i class="fa fa-twitter"></i> Twitter
+    </a>
+  </li>
+{% endif %}
 
+{% if site.github_username %}
+  <li>
+    <a href="https://github.com/{{ site.github_username }}">
+      <i class="fa fa-github"></i> GitHub
+    </a>
+  </li>
+{% endif %}
+
+{% if site.researchgate_username %}
+  <li>
+    <a href="https://researchgate.net/profile/{{ site.researchgate_username }}">
+      <i class="fa fa-hand-o-right"></i> ResearchGate
+    </a>
+  </li>
+{% endif %}
+
+{% if site.mailto %}
+  <li>
+    <a href="mailto:{{ site.mailto}}">
+      <i class="fa fa-envelope-o"></i> Email
+    </a>
+  </li>
+{% endif %}
     <p>&copy; {{ site.time | date: '%Y' }}. All rights reserved.</p>
   </div>
 </div>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
