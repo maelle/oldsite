@@ -21,7 +21,7 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 ## Education
 
-* Since 2012, __PhD student in Statistics__, Ludwig-Maximilian Universität, Munich, Germany. Thesis submitted in March 2016 (see illustration below).
+* 2012-2016, __PhD student in Statistics__, Ludwig-Maximilian Universität, Munich, Germany. Thesis submitted in March 2016 (see illustration below) and successfully defended on the 29th of June 2016.
 
 <img src="{{base.url}}/assets/gestation.gif" alt="gestation" width="300">
 
