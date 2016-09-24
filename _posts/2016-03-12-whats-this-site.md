@@ -1,6 +1,7 @@
 ---
 layout: post
 title: What's this site?
+comments: true
 ---
 
 I plan to add my resume and some words about my work and publications.
