@@ -90,10 +90,6 @@ I then wondered how many jobs could be classified with a probability superior to
 
 ![plot of chunk unnamed-chunk-5](/figure/source/2016-10-02-first7jobs-repost/unnamed-chunk-5-1.png)
 
-```
-## Error in eval(expr, envir, enclos): cannot open stream figures/no_jobs_high_prob.svg
-```
-
 For each 11459 of the tweets I sent to the jobs classifier, I got a field with a probability higher to 0.5 for on average 4-5 job descriptions. We might want even more, and as I'll point it out later, we could get more if we put some effort into it and take full advantage of Monkeylearn possibilities!
 
 # What are jobs by field?
@@ -147,10 +143,6 @@ The 6801 jobs for which we predicted a category with a probability higher than 0
 
 ![plot of chunk unnamed-chunk-7](/figure/source/2016-10-02-first7jobs-repost/unnamed-chunk-7-1.png)
 
-```
-## Error in eval(expr, envir, enclos): cannot open stream figures/categories_count.svg
-```
-
 The most important categories are Restaurant/Food services and Retail. Usual first jobs? 
 
 # Juniorness of the jobs in each field
@@ -160,10 +152,6 @@ Since we know for each job whether it was the first, third or seventh job of the
 
 ![plot of chunk unnamed-chunk-8](/figure/source/2016-10-02-first7jobs-repost/unnamed-chunk-8-1.png)
 
-```
-## Error in eval(expr, envir, enclos): cannot open stream figures/rank_categories.svg
-```
-
 I'd tend to say that some industries such as Business Development / Consulting are not first-entry jobs (more yellow/green i.e. later jobs), while Non-Profit / Volunteering have a higher proportion of brand-new workers (more blue). Not a real surprise I guess?
 
 
@@ -171,11 +159,6 @@ I'd tend to say that some industries such as Business Development / Consulting a
 # Transitions between industries
 
 I've said I wanted to look at life trajectories. This dataset won't give me any information about the level of the job of course, e.g. whether you start as a clerk and end up leading your company, but I can look at how people move from one category to another. [My husband](http://dacornu.github.io/) gave me a great idea of a circle graph he had seen in a newspaper. For this I used only job descriptions for which a field was predicted with a probability higher than 0.5. I kept only possible transitions where there were present more than 10 times in the data, otherwise we'll end up looking at a [hairball](https://twitter.com/drob/status/768485328244056065). 
-
-
-```
-## Error in eval(expr, envir, enclos): cannot open stream figures/circle.svg
-```
 
 ![plot of chunk unnamed-chunk-9](/figure/source/2016-10-02-first7jobs-repost/unnamed-chunk-9-1.png)
 

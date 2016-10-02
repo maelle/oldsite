@@ -90,7 +90,7 @@ output_with_words %>%
   scale_fill_viridis(discrete = TRUE, option = "plasma")+
     theme(text = element_text(size=25),
           legend.position = "none")
-ggsave(file = "figures/no_jobs_high_prob.svg", width = 13, height = 10)
+
 ```
 
 For each `r nrow(first7jobs_parsed)` of the tweets I sent to the jobs classifier, I got a field with a probability higher to 0.5 for on average 4-5 job descriptions. We might want even more, and as I'll point it out later, we could get more if we put some effort into it and take full advantage of Monkeylearn possibilities!
@@ -134,7 +134,7 @@ filter(output_with_words,
   scale_fill_viridis(discrete = TRUE, option = "magma")+
     theme(text = element_text(size=25)) +
   xlab("")
-ggsave(file = "figures/categories_count.svg", width = 18, height = 12)
+
 ```
 
 The most important categories are Restaurant/Food services and Retail. Usual first jobs? 
@@ -168,7 +168,7 @@ ggplot() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))+
     theme(text = element_text(size=25)) +
   scale_fill_viridis(discrete = TRUE)
-ggsave(file = "figures/rank_categories.svg", width = 14, height = 16)
+
 ```
 
 I'd tend to say that some industries such as Business Development / Consulting are not first-entry jobs (more yellow/green i.e. later jobs), while Non-Profit / Volunteering have a higher proportion of brand-new workers (more blue). Not a real surprise I guess?
@@ -181,7 +181,7 @@ I've said I wanted to look at life trajectories. This dataset won't give me any 
 
 ```{r, fig.width=10, fig.height=10}
 library("circlize")
-svglite::svglite(file = "figures/circle.svg", width = 12, height = 12)
+
 # get data with from and to
 count <- mutate(output_with_words,
                             label = substr(label, 1, 11)) %>%
