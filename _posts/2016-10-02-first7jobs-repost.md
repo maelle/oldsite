@@ -162,11 +162,6 @@ I've said I wanted to look at life trajectories. This dataset won't give me any 
 
 ![plot of chunk unnamed-chunk-9](/figure/source/2016-10-02-first7jobs-repost/unnamed-chunk-9-1.png)
 
-```
-## null device 
-##           1
-```
-
 On this circle you see different industries, and the transition between them. The length of the circle occupied by each field depends on the number of jobs belonging to this category, so again the Food and Restauration category is the biggest one. One can see that people taking a position in the Hospitality field, below the circle, often come from the Restauration or the Retail field When they leave this field, they'll often go work in the Restauration field [David Robinson](http://varianceexplained.org/) suggested I find the most common transitions and showed them in directed graphs but I'll keep this idea for later, since this post is quite long already, ah!
 
 As a conclusion, I'm quite excited by the possibilities offered by Monkeylearn for text mining. I might be a grumpy and skeptical statistician so I'll tend to look at all the shortcomings of predictions, but really I think that if ones takes the time to train a module well, they can then get pretty cool information from text written by humans. Now if you tweet about this article, I might go and look at [Monkeylearn's sentiment analysis for tweets module](https://app.monkeylearn.com/main/classifiers/cl_qkjxv9Ly/) instead of reading them.

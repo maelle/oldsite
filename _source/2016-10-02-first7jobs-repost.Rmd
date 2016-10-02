@@ -225,7 +225,7 @@ for(b in 1:length(category)) {
 }
 
 circos.clear()
-dev.off()
+
 
 
 
