@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 highlighter:      rouge
 
 kramdown:
@@ -20,6 +20,8 @@ author:
   url:            https://twitter.com/masalmon
 
 paginate:         5
+
+excerpt_separator: <!--more-->
 
 gems:
   - jekyll-paginate

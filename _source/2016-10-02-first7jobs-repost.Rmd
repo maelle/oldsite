@@ -1,8 +1,6 @@
 ---
 layout: post
 title: 'Analyzing #first7jobs tweets with Monkeylearn and R'
-categories: [analysis, rstats]
-tags: [twitter, rtweet, monkeylearn]
 ---
 
 Note that this is a repost of [my post on Monkeylearn's blog](https://blog.monkeylearn.com/analyzing-first7jobs-tweets-monkeylearn-r/).
@@ -18,8 +16,9 @@ library("dplyr")
 Have you tweeted about your "#firstsevenjobs"? I did!
 
 
-![My first seven jobs.](assets/photos/2016-10-02-first7jobs-repost_myfirst7jobs.png)
+![My first seven jobs.](/assets/photos/2016-10-02-first7jobs-repost_myfirst7jobs.png)
 
+<!--more-->
 
 "#firstsevenjobs" and "#first7jobs" tweets initial goal was to provide a short description of the 7 first activities they were paid for. It was quite fun to read them in my timeline! Of course the hashtag was also used by spammers, for making jokes, and for commenting the hashtag, so not all the tweets contain 7 job descriptions. 
 
@@ -111,7 +110,7 @@ readr::read_csv("data/2016-10-02-first7jobs-repost_keywords_by_industry.csv") %>
 
 For some categories, keywords seem natural to us, for some others we might be more surprised. For instance, the algorithm was trained with data wich included "'Pet Stylist', 'Dog Trainer', 'Pet Stylist (DOG GROOMER)'" for the Wellness/Beauty category, and no "Dog sitter", so that's why here dog sitting is a wellness job. But wait having a dog is good for your health so people caring for your dog help your wellness, right?
 
-![No comment, say hi to my sibling Mowgli. He's quite a beauty.](assets/photos/2016-10-02-first7jobs-repost_mowgli.jpg)
+![No comment, say hi to my sibling Mowgli. He's quite a beauty.](/assets/photos/2016-10-02-first7jobs-repost_mowgli.jpg)
 
 So, well, as any statistical or machine learning prediction... the data you use for training your model is quite crucial. The jobs classifier could probably use even more data for improving classification. As any Monkeylearn public module, it can be built upon and improved, so who's in for forking it? In the meanwhile, it still offers an interesting output to play with. I nearly want to add "Monkeylearn user" as an "Entertainment" job because our sample of classified job descriptions is a nice playground for looking at life trajectories. 
 
