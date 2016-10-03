@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Scientific articles
+title: Publications
 ---
 
 ## As an author
