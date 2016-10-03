@@ -1,6 +1,7 @@
 ---
 layout: post
 title: 'Analyzing #first7jobs tweets with Monkeylearn and R'
+comments: true
 ---
 
 Note that this is a repost of [my post on Monkeylearn's blog](https://blog.monkeylearn.com/analyzing-first7jobs-tweets-monkeylearn-r/).
