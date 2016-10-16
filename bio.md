@@ -39,7 +39,7 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 <img src="{{base.url}}/assets/video.gif" alt="video" width="300">
 
-* My mother tongue is French. I've learnt Spanish. I've learnt Italian too but don't practice much so I mostly only understand it. I'm currently learning Catalan. I also speak English, German, Swedish and I know a bit of Dutch.  
+* My mother tongue is French. I've learnt Spanish and Catalan. I've learnt Italian too but don't practice much so I mostly only understand it. I also speak English, German, Swedish and I know a bit of Dutch.  
 
 ## Personal
 <img src="{{base.url}}/assets/aurayvannes.png" alt="aurayvannes" style="float: left; width: 30%; margin-right: 5%; margin-bottom: 0.5em;">
