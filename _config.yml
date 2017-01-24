@@ -28,6 +28,7 @@ gems:
   - kramdown 
   - jekyll-gist
   - font-awesome-less
+  - jekyll-feed
 
 github:
   repo:           https://github.com/masalmon
