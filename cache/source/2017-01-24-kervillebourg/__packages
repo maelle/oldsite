@@ -1,0 +1,8 @@
+base
+dplyr
+tidyr
+readr
+ggplot2
+ggmap
+viridis
+ggthemes
