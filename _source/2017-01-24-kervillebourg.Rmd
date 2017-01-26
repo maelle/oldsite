@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'French villages and a sort of resolution'
+title: 'French places and a sort of resolution'
 comments: true
 ---
 
@@ -10,16 +10,16 @@ I usually don't have any New Year resolution. However, [recent](https://twitter.
 
 But in 2016 I also started stuff without delivering. In particular, I prepared small data projects in Github repositories with a very precise README because I didn't have a blog and planned to start one after my PhD thesis. Then I created my blog (thanks [Nick](http://www.njtierney.com/jekyll/2015/11/11/how-i-built-my-site/)!) and... only re-posted [an analysis of mine](http://www.masalmon.eu/2016/10/02/first7jobs-repost/) from another blog. My nice repositories are still lying around and they represent quite a few of my [West Side-project Story unfinished buildings](http://www.commitstrip.com/en/2014/11/25/west-side-project-story/). I've decided transforming some of my usable data projects into blog posts was a nice step towards being or at least feeling more productive.
 
-Let's start today with my visualizations of names of French villages!
+Let's start today with my visualizations of names of French places!
 
 
 <!--more-->
 
 _Note: the analysis was originally prepared [here](https://github.com/masalmon/kervillebourg) and advertised on [Twitter](https://twitter.com/ma_salmon/status/728660470798946304)_
 
-Inspired by [this work about names of villages in Germany](https://github.com/hrbrmstr/zellingenach), I wanted to have a look at the names of French villages. I decided against looking at prefixes and suffixes because I got a more poetical idea: looking for water and saints in my home country.
+Inspired by [this work about names of places in Germany](https://github.com/hrbrmstr/zellingenach), I wanted to have a look at the names of French places. I decided against looking at prefixes and suffixes because I got a more poetical idea: looking for water and saints in my home country.
 
-I got a file of all French villages names and geolocation from [Geonames](http://download.geonames.org/), which you can find in the [data folder](data/). Thanks to Bob Rudis for providing me with [the link](https://gist.github.com/hrbrmstr/0fd37cf3825fc8e3eddf042a4443d1dc). The data is distributed under [this license](http://creativecommons.org/licenses/by/3.0/).
+I got a file of all French places names and geolocation from [Geonames](http://download.geonames.org/). Thanks to Bob Rudis for providing me with [the link](https://gist.github.com/hrbrmstr/0fd37cf3825fc8e3eddf042a4443d1dc). The data is distributed under [this license](http://creativecommons.org/licenses/by/3.0/).
 
 # A first look at the data
 
@@ -35,7 +35,7 @@ knitr::kable(head(ville))
 
 # Names of rivers and sea
 
-Here I selected names of towns and villages that include the names of a few rivers in France, or the word "sea" ("sur-Mer"). This is by no mean an exhaustive representation of such names since I only chose a few rivers and a single pattern of name.
+Here I selected names of towns and places that include the names of a few rivers in France, or the word "sea" ("sur-Mer"). This is by no mean an exhaustive representation of such names since I only chose a few rivers and a single pattern of name.
 
 I created new variables that are Booleans by looking for given pattern in names, like "sur-Mer", then I only filtered the lines where one of the pattern was found, and used `tidyr::gather` function to end up with the long format you see below.
 
