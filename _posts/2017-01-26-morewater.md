@@ -4,7 +4,7 @@ title: 'More water, a bit more about saints'
 comments: true
 ---
 
-I was lucky enough to get some nice and interesting feedback on [my last post](http://www.masalmon.eu/2017/01/24/kervillebourg/), and overall . One comment was really useful and pretty embarrassing: I had written "see" instead of "sea" in the whole post... Thanks Steve Dempsey for the correction! I also got some questions which I decided to explore.
+I was lucky enough to get some nice and interesting feedback on [my last post](http://www.masalmon.eu/2017/01/24/kervillebourg/). One comment was really useful and pretty embarrassing: I had written "see" instead of "sea" in the whole post... Thanks Steve Dempsey for the correction! I also got some questions which I decided to explore.
 
 <!--more-->
 
@@ -260,7 +260,7 @@ arrange(saints_freq, desc(n_places)) %>%
 |saint  |Michel    |      168|
 |saint  |André     |      164|
 
-So for _saints_ I see names that are still common in France. And _André_ as 11th one, which might explain why I chose the 11th most popular ones...
+So for _saints_ I see names that are still common in France. And _André_ as 11th one, which might explain why I chose the 11 most popular ones...
 
 
 ```r
