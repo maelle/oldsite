@@ -33,9 +33,9 @@ knitr::kable(head(ville))
 
 ```
 
-# Names of rivers and see
+# Names of rivers and sea
 
-Here I selected names of towns and villages that include the names of a few rivers in France, or the word "see" ("sur-Mer"). This is by no mean an exhaustive representation of such names since I only chose a few rivers and a single pattern of name.
+Here I selected names of towns and villages that include the names of a few rivers in France, or the word "sea" ("sur-Mer"). This is by no mean an exhaustive representation of such names since I only chose a few rivers and a single pattern of name.
 
 I created new variables that are Booleans by looking for given pattern in names, like "sur-Mer", then I only filtered the lines where one of the pattern was found, and used `tidyr::gather` function to end up with the long format you see below.
 
@@ -78,7 +78,7 @@ ggmap(map) +
              aes(x = longitude, y = latitude, col = name)) +
   scale_color_viridis(discrete = TRUE, option = "plasma")+
   theme_map()+
-  ggtitle("French placenames containing the name of a river or 'see'") +
+  ggtitle("French placenames containing the name of a river or 'sea'") +
   theme(plot.title = element_text(lineheight=1, face="bold"))+
   theme(text = element_text(size=14))
 
