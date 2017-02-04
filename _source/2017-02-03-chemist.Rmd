@@ -1,0 +1,162 @@
+---
+layout: post
+title: 'A visual CV for a chemist'
+comments: true
+---
+
+This week at work I started using [`rbokeh`](https://hafen.github.io/rbokeh/), the R interface to Bokeh. The package allows to create web-based interactive plots. I was mostly excited about the zooming tools that a local R-Lady mentioned to me. They made data exploration so much easier, thanks a bunch Elena! 
+
+When checking out the doc, I saw an example called "Periodic table of the elements with additional info on hover". While this was useless at work where I only made time series plots, I could set aside this application for my leisure time. I made an interactive CV for my husband, Damien, who is a chemist!
+
+<!--more-->
+
+You'll find the original periodic table example in [`rbokeh`'s preview](https://hafen.github.io/rbokeh/#preview). My code is very similar to the one there!
+
+# Getting data
+
+## Elements
+
+One gets the elements data from the package itself.
+
+```{r, message = FALSE, warning = FALSE}
+library("rbokeh")
+library("dplyr")
+data(elements)
+knitr::kable(head(elements))
+
+```
+
+It looks fine but some elements recently got [new names](https://iupac.org/iupac-announces-the-names-of-the-elements-113-115-117-and-118/). I wouldn't know about it from my own readings, but well my husband did, and he can recommend [a radio show in French](https://www.franceculture.fr/emissions/la-methode-scientifique/mendeleiev-un-tableau-enfin-complet) about it because one of his favourite tweeps is the interviewee. He obviously thinks I can drive traffic to any website I want with this blog. I couldn't find how to update the table of the package so opened an issue at `rbokeh` and will selfishly solve the issue for myself here. 
+
+The ones that got new names compared to the table of the package are 113, 114, 115, 116, 117, and 118. Actually 118 wasn't even in the `rbokeh` table so we'll add it. I'm adding the atomic masses too but I was told that an atomic mass superior to 82 doesn't have much interest anyway because of the unstability of the elements. 
+
+
+```{r, warning = FALSE}
+elements <- filter(elements, !atomic.number %in% c(113, 114, 115, 116, 117))
+
+renamed_elements <- data.frame(atomic.number = c(113, 114, 115, 116, 117, 118),
+                                   symbol = c("Nh", "Fl", "Mc", "Lv", "Ts", "Og"),
+                                   name = c("Nihonium", "Flerovium", "Moscovium", "Livermorium", "Tennessine", "Oganesson"),
+                                   atomic.mass = c("[284]", "[289]", "[288]", "[293]", "[294]", "[294]"),
+                               group = c("13", "14", "15", "16", "17", "18"),
+                               period = rep("7", 6))
+
+elements <- bind_rows(elements, renamed_elements)
+
+knitr::kable(tail(elements))
+
+```
+
+Okay now the table looks like a 2017 table of elements.
+
+
+## Experience
+
+I didn't want to have additional information about the elements but rather pieces of experience of my husband who was actually thrilled to fill a table with stuff he's done with elements. Here is what he sent me.
+
+```{r, warning = FALSE}
+damien <- readr::read_csv2("data/2017-02-03-chemist_Elements.csv")
+
+knitr::kable(head(damien))
+
+```
+
+I think it's funny to print Damien's head. I was less amused by the second column name because of the spaces, so I renamed it before joining it to the original elements table. I also replaced the missing values of the elements table, corresponding to elements my husband had nothing to say about, with empty strings.
+
+```{r, warning = FALSE}
+names(damien)[2] <- "desc"
+elements <- left_join(elements, damien, by = c("symbol" = "Element"))
+elements <- mutate(elements, Place = ifelse(is.na(Place), "", Place))
+elements <- mutate(elements, desc = ifelse(is.na(desc), "", desc))
+```
+
+# Drawing the table
+
+## Preparing the colours and coordinates
+
+Nothing new here, I'm pretty much doing the same as in the doc, `dplyr` style.
+
+```{r, warning = FALSE}
+places <- unique(elements$Place)
+colors <- c("#a6cee3", "#1f78b4", "#fdbf6f", "white", "#b2df8a", "#33a02c",
+            "#bbbb88", "#baa2a6", "#e08e79")
+colors <- data.frame(Place = places, color = colors)
+elements <- select(elements, - color)
+elements <- left_join(elements, colors, by = "Place")
+
+``` 
+
+This is the part where the tutorial indicates how to create coordinates for putting every text in its place.
+
+```{r, warning = FALSE}
+
+elements <- mutate(elements, symx = paste0(group, ":0.1"))
+elements <- mutate(elements, numbery = paste(period, ":0.8", sep = ""))
+elements <- mutate(elements, massy = paste(period, ":0.15", sep = ""))
+elements <- mutate(elements, namey = paste(period, ":0.3", sep = ""))
+
+
+```
+
+## Plotting itself
+
+I haven't got a ton of experience with `rbokeh`, the main syntax differences I noted compared to `ggplot2` was the piping and the fact that you need to specify data for each layer. You'll find a better comparison [on Bob Rudis' blog](https://rud.is/b/2015/05/26/a-quick-incomplete-comparison-of-ggplot2-rbokeh-plotting-idioms/).
+
+But in the case of the period table I only really needed to copy paste code, thanks a lot to Ryan Hafen for his awesome package and for the cool example. The part of the code I changed is `hover = list(name, desc, place)` which is the part where I choose to show the experience my husband associates with each element. In the original example the hover tool showed more info about elements. Note that Damien doesn't even associates something really interesting with gold like, you know, a wedding ring. Bummer.
+
+```{r, warning = FALSE}
+# See you create a table like this and add a serious title
+p <- figure(title = "Periodic Table of Damien Cornu's experience", tools = c("resize", "hover"),
+            ylim = as.character(c(7:1)), xlim = as.character(1:18),
+            xgrid = FALSE, ygrid = FALSE, xlab = "", ylab = "",
+            height = 445, width = 800) %>%
+  
+  # Here the rectangles are created, 
+  # without experience rectangles get a while fill
+  ly_crect(group, period, data = elements, 0.9, 0.9,
+           fill_color = color,
+           line_color = "grey", fill_alpha = 0.6,
+           hover = list(name, desc, Place)) %>%
+  
+  # add symbol text
+  ly_text(symx, period, text = symbol, data = elements,
+          font_style = "bold", font_size = "10pt",
+          align = "left", baseline = "middle") %>%
+  
+  # add atomic number text
+  ly_text(symx, numbery, text = atomic.number, data = elements,
+          font_size = "6pt", align = "left", baseline = "middle") %>%
+  
+  # add name text
+  ly_text(symx, namey, text = name, data = elements,
+          font_size = "4pt", align = "left", baseline = "middle") %>%
+  
+  # add atomic mass text
+  ly_text(symx, massy, text = atomic.mass, data = elements,
+          font_size = "4pt", align = "left", baseline = "middle")
+
+```
+
+# Displaying the CV
+
+Maybe the way I display the `rbokeh` plot on this page is a dirty hack. Using the `htmlwidget` package I saved the widget,
+
+```r
+htmlwidgets::saveWidget(p, file = "damien.html")
+```
+And then I simply included the html file thus created. If you knit a html, not a html via a .md as is the case with a Jekyll website, you don't need these two steps to display a widget. At work I made a [flexdashboard](http://rmarkdown.rstudio.com/flexdashboard/) with `rbokeh` and it couldn't have been easier.
+
+```r
+htmltools::includeHTML("https://raw.githubusercontent.com/masalmon/masalmon.github.io/master/_source/damien.html")
+```
+
+
+```{r, echo=FALSE}
+htmltools::includeHTML("https://raw.githubusercontent.com/masalmon/masalmon.github.io/master/_source/damien.html")
+```
+
+Note: this period table of elements doesn't show the lanthanides and actinides.
+
+Now you can browse the periodic table of my husband's experience, which he'll soon include [on his website](http://dacornu.github.io/) as a visual CV. It includes his research but also the fact that he was a guide for tours about Marie Curie's life. I'm happy for him not to use radioactive elements for real, and of course for him to support women in science (I'll get him [this pretty sticker](https://twitter.com/alice_data/status/826929489447890945) if Alice ends up printing it). 
+
+Now it's your turn to create an interactive periodic table for the chemist in your life! I'd also be curious of how to map one's experience in other fields than chemistry. I made a [`leaflet`](https://rstudio.github.io/leaflet/) map for Damien and my websites with places where we studied or worked (you now know he really didn't marry me for my good looks) which is a pretty straightforward "experience-mapping" method but maybe one could imagine a phylogenetic tree for a biologist? You tell me!
