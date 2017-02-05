@@ -272,4 +272,4 @@ ggplot(animal_counts) +
 
 ![plot of chunk unnamed-chunk-9](/figure/source/2017-02-05-actuallivingscientists/unnamed-chunk-9-1.png)
 
-I was amazed at the diversity of animals of the tweets, many of them being research subjects. I like my current research field a lot, but how cool is ecology of animals? Keep up the good work folks!  
+I was amazed at the diversity of animals of the tweets, many of them being research subjects. I like my current research field a lot, but how cool is ecology or biology of animals? Keep up the good work folks!  
