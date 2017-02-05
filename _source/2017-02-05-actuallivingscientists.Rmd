@@ -62,7 +62,7 @@ library("rcorpora")
 head(corpora("animals/common")$animals)
 ```
 
-A few animals are bigrams, for instance "grizzly bear" so I'll really use the exact same approach and code as Julia in her songs post. In case you think I often end up copy-pasting code from other people in my blog posts, please know that I often end up copy-pasting code from other people _in general_ when I do something for the first time.
+A few animals are bigrams, for instance "grizzly bear" so I'll really use the exact same approach and code as Julia in her songs post. In case you think I often end up copy-pasting R code from other people in my blog posts, please know that I often end up copy-pasting R code from other people _in general_ when I do something for the first time.
 
 ```{r}
 library("tidytext")
