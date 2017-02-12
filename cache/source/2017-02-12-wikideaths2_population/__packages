@@ -1,0 +1,9 @@
+base
+ggplot2
+viridis
+broom
+dplyr
+lubridate
+tidytext
+rcorpora
+trend

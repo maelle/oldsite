@@ -1,0 +1,150 @@
+---
+layout: post
+title: 'Who were the notable dead of Wikipedia?'
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE)
+```
+
+As described [in my last post](http://www.masalmon.eu/2017/02/12/wikideaths3_scraping/), I extracted all notable deaths from Wikipedia over the 2004-2016 period. In this post I want to explore this study population. Who were the notable dead?
+
+<!--more-->
+
+# How old were notable dead?
+
+Let me assume here most entries of the table are humans. I won't make the effort to remove dogs or horses from the list yet, which introduces a small mistake.
+
+```{r}
+library("ggplot2")
+library("viridis")
+library("broom")
+library("dplyr")
+library("lubridate")
+library("tidytext")
+library("rcorpora")
+deaths <- readr::read_csv("data/deaths_with_demonyms.csv")
+```
+
+As a reminder, in case you didn't learn the figures from my last post (shame on you), the table contains information about `r nrow(deaths)` notable deaths. I could extract the age of `r round(sum(!is.na(deaths$age))/nrow(deaths), digits = 3)*100`% of them.
+
+```{r}
+ggplot(deaths) +
+  geom_histogram(aes(age)) +
+  ggtitle("Age at death of Wikipedia notable dead")
+```
+
+Let's be honest, I expected a bimodal distribution with a first peak at 27.
+
+```{r}
+
+tidy(summary(deaths$age))
+
+```
+
+Wow this is a really high maximal age.
+
+```{r}
+arrange(deaths, desc(age)) %>%
+  head(n = 10) %>%
+  knitr::kable()
+
+```
+
+Ok, so the oldest beings in this table were a tortoise and a tree, which we might want to remove from the rest of the analysis.
+
+```{r}
+deaths <- filter(deaths, age < 125)
+```
+
+What about the deaths at the youngest ages?
+
+```{r}
+arrange(deaths, age) %>%
+  head(n = 10) %>%
+  knitr::kable()
+
+```
+
+As one could have expected, the deaths at youngest ages are some sad stories, about humans but also animals. 
+
+Did the age distribution change over time?
+
+```{r}
+deaths <- mutate(deaths, death_year = as.factor(year(date)))
+ggplot(deaths) +
+  geom_boxplot(aes(death_year, age, fill = death_year)) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme(legend.position = "none")
+
+
+```
+
+Well _maybe_ there is an increasing trend? I wouldn't be surprised if it were the case, since life expectancy tends to increase. I first wrote I wouldn't take the time to test the trend and then I had a very interesting discussion with [Miles McBain](https://twitter.com/milesmcbain) and [Nick Tierney](http://www.njtierney.com/). I had first thought of a linear model, then of a survival analysis but I only have positive events. While using a linear model or a GLM the residuals were never normally distributed. Then Miles mentioned non-parametric tests which is something I never think about. Googling a bit around I fount the Mann-Kendall test!
+
+I'm quite lucky I want to see if age at death monotically increases over _time_ because that seems to be the usual use case for it. I choose to use the time series of weekly median age, which I'm not too sure is the best choice. I could have chosen monthly average age, etc. 
+
+```{r}
+library("trend")
+library("lubridate")
+weekly_median_age <- deaths %>% 
+  filter(!is.na(age)) %>%
+  group_by(wiki_link) %>%
+  mutate(week = paste(year(date), week(date))) %>%
+  group_by(week) %>%
+  summarize(age = median(age)) %>% .$age
+weekly_median_age <- as.ts(weekly_median_age)
+plot(weekly_median_age)
+res <- mk.test(weekly_median_age)
+summary.trend.test(res)
+
+```
+
+Using this test I have now more support for the existence of a trend, but not for its direction. The same package has an implementation of Sen's method to compute the slope.
+
+```{r}
+sens <- sens.slope(weekly_median_age, level = 0.95)
+sens
+```
+
+With such a slope in one year one gains `r round(sens$b.sen * 52, digits = 2)` years. Will we soon have humans as old as Harriet the tortoise?
+
+# Where did notable dead come from?
+
+```{r countries}
+deaths %>% group_by(country) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  head(n = 10) %>%
+  knitr::kable()
+```
+
+Unsurprisingly given what I imagine to be the countries of Wikipedia contributors in English, mostly from developped countries, and then India is a huge English-speaking country. It'd probably be interesting to repeat the same data extraction for all languages and see how we rather know celebrities speaking our own language or sharing our culture (or who come from countries that colonized your own country?). 
+
+## What were the reasons of notability?
+
+I first played with the idea of using my `monkeylearn` package to associated an industry to each occupation/reason for being notable, but I soon realized the description was too short for the extractor. I also soon saw I wouldn't be able to find a good list of jobs, so I resorted to simply look for the most present terms using `tidytext`. For removing the stop-words I used `rcorpora`.
+
+```{r}
+stopwords <- corpora("words/stopwords/en")$stopWords
+
+deaths_words <- deaths %>%
+  unnest_tokens(word, occupation) %>%
+  count(word, sort = TRUE) %>%
+  filter(!word %in% stopwords)
+
+
+head(deaths_words, n = 10) %>%
+  knitr::kable()
+```
+
+From these 10 most prevalent terms we could assume being a politician, some sort of athlete (player could also be a football player) or artist can make you notable. It's interesting to see there are far more actors than actresses. In case you didn't get the message, in the table there are `r sum(grepl("businessman", deaths$occupation))` businessmen, `r sum(grepl("businesswoman", deaths$occupation))` businesswomen, `r sum(grepl("businessperson", deaths$occupation))` business persons. 
+
+I also noticed that there are `r sum(grepl("murderer", deaths$occupation))` murderers and  `r sum(grepl("serial killer", deaths$occupation))` serial killers vs. `r sum(grepl("chemist", deaths$occupation))` chemists and `r sum(grepl("statistician", deaths$occupation))` statisticians. Since the term "data scientist" is quite young, there is none in my table, and I sure wish you'll all stay healthy, my friends! [In the next post](http://www.masalmon.eu/2017/02/12/wikideaths3_ts/) I'll present the analysis of the time series of monthly count of deaths. 
+
+If you liked learning more about notable dead, you can have a look at the analysis Hazel Kavili started doing of [celebrity deaths in 2016](https://github.com/UniversalTourist/celebrityDeaths).
+
+I'd like to end this post with a note from my husband, who thinks having a blog makes me an influencer. If you too like Wikipedia, consider [donating to the Wikimedia foundation](https://wikimediafoundation.org/wiki/Ways_to_Give).
