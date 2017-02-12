@@ -8,6 +8,8 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       warning = FALSE, 
                       cache = TRUE)
+library("ggplot2")
+theme_set(theme_bw(base_size = 16))
 ```
 
 As described [in my last post](http://www.masalmon.eu/2017/02/12/wikideaths3_scraping/), I extracted all notable deaths from Wikipedia over the 2004-2016 period. In this post I want to explore this study population. Who were the notable dead?
@@ -122,7 +124,7 @@ deaths %>% group_by(country) %>%
   knitr::kable()
 ```
 
-Unsurprisingly given what I imagine to be the countries of Wikipedia contributors in English, mostly from developped countries, and then India is a huge English-speaking country. It'd probably be interesting to repeat the same data extraction for all languages and see how we rather know celebrities speaking our own language or sharing our culture (or who come from countries that colonized your own country?). 
+Unsurprisingly given what I imagine to be the countries of Wikipedia contributors in English, mostly from developped countries, and then India is a huge English-speaking country. It'd probably be interesting to repeat the same data extraction for all languages and see how we rather know celebrities speaking our own language or sharing our culture. 
 
 ## What were the reasons of notability?
 

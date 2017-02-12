@@ -7,12 +7,15 @@ comments: true
 knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       warning = FALSE, 
-                      cache = TRUE)
+                      cache = FALSE)
+library("ggplot2")
+theme_set(theme_bw(base_size = 16))
 ```
 
 After exploring my [study population](http://www.masalmon.eu/2017/02/12/wikideaths2_population/) of Wikipedia deaths, I want to analyse the time series of monthly counts of notable deaths. This is not a random interest of mine, [my PhD thesis](https://edoc.ub.uni-muenchen.de/19877/) was about monitoring time series of count, the application being weekly number of reported cases of various diseases.
 
 <!--more-->
+
 
 # Number of deaths reported over time
 
@@ -81,11 +84,7 @@ ts_deaths = ts(ts_deaths, freq=12, start=c(2004, 1))
 plot(ts_deaths)
 ```
 
-Then I use a model with regression on the past mean and with a temporal trend. 
-
-I log-transform time because the regression model uses a log link and I don't expect the time trend to be exponential on the response scale.
-
-I'll fit a Poisson and a negative binomial models in order to compare them.
+Then I use a model with regression on the past observation, on the mean from one year ago, and with a temporal trend. I log-transform time because the regression model uses a log link and I don't expect the time trend to be exponential on the response scale. I'll fit a Poisson and a negative binomial models in order to compare them.
 
 ```{r}
 time <- log(1:nrow(monthly_deaths))
@@ -108,8 +107,8 @@ The smaller the scoring rule the better, so we should use the negative binomial 
 I realized there's no `broom` "adapter" for `tsglm` so I'll write untidy code and hope you'll all forgive me.
 
 ```{r}
-
-pred2016 <- predict(fit_nb, n.ahead = 12, level = 0.9, global = TRUE, B = 2000, newxreg = time[145:156])
+set.seed(1)
+pred2016 <- predict(fit_nb, n.ahead = 12, level = 0.9, global = TRUE, B = 3000, newxreg = time[145:156])
 monthly_deaths <- mutate(monthly_deaths, lower = NA,
                          upper = NA, pred = NA)
 monthly_deaths$lower[145:156] <- pred2016$interval[,1]
@@ -133,5 +132,6 @@ ggplot(monthly_deaths) +
 ```
 
 So what? All number of deaths of 2016 are in the 90% coverage prediction interval computed by `tscount` which means that maybe 2016 wasn't a bad year for notable deaths _in general_, but then one should make the same analysis on a subset of the data like notable dead from the arts by filtering them according to their role, or notable dead whose Wikipedia pages consistently had more than X% of total Wikipedia daily page views before their deaths. I'm actually planning on doing more with page views, but in the meantime, it was nice to play with time series of counts again!
+
 
 I'd like to end this post with a note from my husband, who thinks having a blog makes me an influencer. If you too like Wikipedia, consider [donating to the Wikimedia foundation](https://wikimediafoundation.org/wiki/Ways_to_Give).
