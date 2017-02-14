@@ -130,8 +130,78 @@ ggplot(monthly_deaths) +
               alpha = 0.5)
 
 ```
+SEE THE UPDATE BELOW! 2017-02-14
 
-So what? All number of deaths of 2016 are in the 90% coverage prediction interval computed by `tscount` which means that maybe 2016 wasn't a bad year for notable deaths _in general_, but then one should make the same analysis on a subset of the data like notable dead from the arts by filtering them according to their role, or notable dead whose Wikipedia pages consistently had more than X% of total Wikipedia daily page views before their deaths. I'm actually planning on doing more with page views, but in the meantime, it was nice to play with time series of counts again!
+After discussing the model above with several people (including in the comments of the post, thanks Michael, and by email, thanks Tobias) and realizing I hadn't checked the residual auto-correlation properly (shame on me!) I decided to re-do the model with an offset. Now `tscount` doesn't support offsets yet so I resorted to `glarma`. I used the number of articles on Wikipedia as an offset and data from 2009 only because after 2009 the ratio of the number of notable deaths per month divided by the number of articles seemed more or less constant. I got the data on the number of articles from [this really cool Wikipedia article](https://en.wikipedia.org/wiki/Wikipedia:Size_of_Wikipedia). I quite lazily used the latest non missing number of Wikipedia articles as number of articles for each day and made an average for the month.
+
+```{r}
+# not really a table so I copy pasted it
+wikisize <- readr::read_csv("data/2017-02-14_wikisize.csv",
+                            col_names = c("date", "articles_count", "comment"))
+deaths <- deaths %>%
+  group_by(date) %>%
+  summarize(n_deaths = n()) 
+
+deaths <- left_join(deaths, wikisize, by = "date")
+# latest number of 2003
+deaths$articles_count[1] <- 188538
+deaths <- mutate(deaths, 
+                 articles_count = zoo::na.locf(articles_count))
+
+monthly_deaths <- deaths  %>%
+  group_by(date) %>%
+  mutate(month = update(date, day = 1)) %>%
+  ungroup() %>%
+  group_by(month) %>%
+  summarize(n = sum(n_deaths),
+            articles = mean(articles_count))
+
+ggplot(monthly_deaths) +
+  geom_point(aes(month, n/articles))
+
+library("glarma")
+monthly_deaths <- filter(monthly_deaths,
+                         year(month) > 2008)
+ts_deaths <- xts::xts(monthly_deaths$n[1:84],
+                      monthly_deaths$month[1:84])
+
+ts_deaths = ts(ts_deaths, freq=12, start=c(2009, 1))
+
+```
+
+I then use a new model. For upper and lower bounds I used quantiles from the negative binomial distribution.
+
+
+```{r}
+
+glarmamodOffset <- glarma(ts_deaths,
+                          X = as.matrix(rep(1, 84)),
+                          offset = log(monthly_deaths$articles[1:84]/100000),
+                          phiLags = c(1, 12),
+                          type = "NegBin", method = "FS",
+                          residuals = "Pearson", maxit = 100, grad = 1e-6)
+
+pred <- forecast(glarmamodOffset, n.ahead = 12, 
+                   newdata = as.matrix(rep(1, 12)), 
+                   newoffset = log(monthly_deaths$articles[85:96]/100000))
+
+monthly_deaths <- mutate(monthly_deaths,
+                         pred = NA, lower = NA, upper = NA)
+monthly_deaths$pred[85:96] <- pred$Y
+monthly_deaths$upper[85:96] <- qnbinom(0.975, mu = pred$Y, size = glarmamodOffset$delta[4])
+monthly_deaths$lower[85:96] <- qnbinom(0.125, mu = pred$Y, size = glarmamodOffset$delta[4])
+ggplot(monthly_deaths) +
+  geom_segment(aes(x = month, xend = month,
+                   y = 0, yend = n)) +
+  ylab("Number of reported deaths") +
+  xlab("Time (months)") +
+  geom_line(aes(x = month, y = pred), col = "blue")+
+  geom_ribbon(aes(x = month, ymin = lower, ymax = upper),
+              alpha = 0.5)
+
+```
+
+So what? First I'd say it's important to check your model really well, maybe this one isn't the best one but it's already better than the previous one, and I'll keep thinking about how to improve it but I already wanted to post a mea culpa! Now regarding my initial question, nearly all number of deaths of 2016 are below the 95% quantile of the negative binomial distribution (disregarding estimation uncertainty) which means that maybe 2016 wasn't a bad year for notable deaths _in general_, but then one should make the same analysis on a subset of the data like notable dead from the arts by filtering them according to their role, or notable dead whose Wikipedia pages consistently had more than X% of total Wikipedia daily page views before their deaths. I'm actually planning on doing more with page views, but in the meantime, it was nice to play with time series of counts again!
 
 
 I'd like to end this post with a note from my husband, who thinks having a blog makes me an influencer. If you too like Wikipedia, consider [donating to the Wikimedia foundation](https://wikimediafoundation.org/wiki/Ways_to_Give).
