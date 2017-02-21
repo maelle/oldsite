@@ -5,7 +5,7 @@ comments: true
 ---
 
 
-When I create a new .git repository, my first commit message tends to be "1st commit". I've been wondering what other people use as initial commit message. Today I've used the [`gh` package](https://github.com/r-pkgs/gh) to get first commits of all repositories of the [ropensci](https://github.com/ropensci) and [ropenscilabs](https://github.com/ropenscilabs) organizations.
+When I create a new .git repository, my first commit message tends to be "1st commit". I've been wondering what other people use as initial commit message. Today I used the [`gh` package](https://github.com/r-pkgs/gh) to get first commits of all repositories of the [ropensci](https://github.com/ropensci) and [ropenscilabs](https://github.com/ropenscilabs) organizations.
 
 <!--more-->
 
