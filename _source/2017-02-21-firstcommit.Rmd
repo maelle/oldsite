@@ -1,0 +1,122 @@
+---
+layout: post
+title: 'First commit or initial commit?'
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = FALSE, 
+                      eval = FALSE)
+```
+
+When I create a new .git repository, my first commit message tends to be "1st commit". I've been wondering what other people use as initial commit message. Today I've used the [`gh` package](https://github.com/r-pkgs/gh) to get first commits of all repositories of the [ropensci](https://github.com/ropensci) and [ropenscilabs](https://github.com/ropenscilabs) organizations.
+
+<!--more-->
+
+The sample might seem a bit small, but I just wanted to start exploring my question. I agree that it means my answer won't be very conclusive.
+
+# Getting all repos for an organization
+
+I've come up with a quite inelegant solution to paging, I just continue querying the API until it returns me nothing.
+
+```{r, eval = TRUE}
+library("gh")
+library("dplyr")
+library("purrr")
+get_repos <- function(org){
+  ropensci_repos_names <- NULL
+page <- 1
+geht <- TRUE
+while(geht){
+  ropensci_repos <- try(gh("/orgs/:org/repos",
+                  org = org,
+                  page = page))
+  
+  geht <- ropensci_repos != ""
+  
+  if(geht){
+    ropensci_repos_names <- c(ropensci_repos_names,
+                              vapply(ropensci_repos, "[[", "", "name"))
+    page <- page + 1
+  }
+}
+  return(ropensci_repos_names)
+}
+
+head(get_repos(org = "ropenscilabs"))
+```
+
+# Get first commit for a repository
+
+Here I'm doing something quite inefficient. Since the API returns the most recent commits first I get all commits. I could have used the creation date of the repository instead to only query commits created shortly after that.
+
+```{r, eval = TRUE}
+first_commit <- function(repo, org){
+  messages <- NULL
+  
+  page <- 1
+  geht <- TRUE
+  while(geht){
+    commits <- try(gh("/repos/:owner/:repo/commits",
+                            owner = org,
+                            repo = repo,
+                            page = page))
+    
+    if(class(commits)[1] != "try-error"){
+      geht <- commits != ""
+    }else{
+      geht <- FALSE
+    }
+    
+    if(geht){
+      now <- lapply(commits, "[[", "commit")
+      now <- lapply(now, "[[", "message")
+      messages <- c(messages, unlist(now))
+      page <- page + 1
+    }
+  }
+  
+  messages[length(messages)]
+}
+first_commit("ropenaq", "ropensci")
+```
+
+I'm a bit surprised I chose "Everything" as first commit for my `ropenaq` package, actually. Not because I expect my commit history to be particularly smart either, just because it's not a "1st commit".
+
+# Get all the first commits
+
+```{r}
+
+first_commits <- get_repos("ropenscilabs") %>%
+  map(first_commit, org = "ropenscilabs") 
+save(first_commits, file = "data/2017-02-21_ropenscilabs_first_commits.RData")
+first_commits <- get_repos("ropensci") %>%
+  map(first_commit, org = "ropensci") 
+save(first_commits, file = "data/2017-02-21_ropensci_first_commits.RData")
+```
+
+# What are the most frequent first commits?
+
+```{r, eval = TRUE}
+load("data/2017-02-21_ropenscilabs_first_commits.RData")
+ropenscilabs <- first_commits
+load("data/2017-02-21_ropensci_first_commits.RData")
+ropensci <- first_commits
+
+all <- c(unlist(ropenscilabs),
+         unlist(ropensci))
+firstc <- tibble::tibble(commit = all)
+firstc <- mutate(firstc, commit = tolower(commit))
+firstc %>%
+  group_by(commit) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  head(n = 15) %>%
+  knitr::kable()
+
+```
+
+
+Out of the `r nrow(firstc)` repositories, `r sum(firstc$commit == "initial commit")` used "initial commit" as a first commit message and  `r sum(firstc$commit == "first commit")` used "first commit" instead. In total `r round(sum(firstc$commit %in% c("first commit", "initial commit"))/nrow(firstc), digits = 2)` of all repos used either one of these two messages, which isn't as much as I expected. But maybe rOpenSci repositories are unusual as regards first commit originality? And you, what is your favourite initial commit message if you have one?
