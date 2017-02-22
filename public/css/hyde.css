@@ -45,6 +45,13 @@ html {
   }
 }
 
+/* Horizontal Scrolling for Code  */
+pre {
+  overflow: auto;
+  word-wrap: normal;
+  white-space: pre;
+}
+
 
 /*
  * Sidebar
