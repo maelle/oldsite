@@ -1,0 +1,8 @@
+base
+rtweet
+tidytext
+dplyr
+rcorpora
+lubridate
+ggplot2
+viridis

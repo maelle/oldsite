@@ -1,0 +1,164 @@
+---
+layout: post
+title: "A glance at R-bloggers Twitter feed"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = FALSE)
+```
+
+It's the second time I write a post about the blog aggregator R-bloggers, probably because I'm all about R blogs now that I have one. My husband says my posts are so meta. My first post was about [R blogs names](http://www.masalmon.eu/2017/01/29/rbloggersnames/), in this one I shall focus on the last 1,000 tweets from R-bloggers.
+
+<!--more-->
+
+# Getting the tweets
+
+Thanks to [`rtweet`](https://github.com/mkearney/rtweet), this is fairly easy. I get rid of empty columns using [`janitor`](https://github.com/sfirke/janitor), which is a package you should really check out if you ever have to clean data.
+
+```{r, cache = TRUE}
+library("rtweet")             
+rbloggers <- get_timeline(user = "Rbloggers",
+                          n = 1000)
+
+rbloggers <- janitor::remove_empty_cols(rbloggers)
+
+readr::write_csv(rbloggers, path = "data/2017-02-28-rbloggerstweets.csv")
+
+knitr::kable(head(rbloggers))
+
+```
+
+Now that I have the data, I'll have a look at the content of the tweet, at their temporal patterns and at their popularity.
+
+# What are the most frequent words?
+
+For finding the most frequent words in the tweets I use what has now become my usual workflow with `tidytext`. I remove 4 words that correspond to the hashtags used in every tweet (#rstats and #datascience) and to links (https and t.co)
+
+```{r}
+rbloggers <- readr::read_csv("data/2017-02-28-rbloggerstweets.csv")
+library("tidytext")
+library("dplyr")
+library("rcorpora")
+library("lubridate")
+library("ggplot2")
+library("viridis")
+stopwords <- corpora("words/stopwords/en")$stopWords
+
+rbloggers_words <- rbloggers %>%
+  unnest_tokens(word, text) %>%
+  count(word, sort = TRUE) %>%
+filter(!word %in% stopwords) %>%
+  filter(!word %in% c("rstats", "datascience",
+                      "t.co", "https"))
+knitr::kable(head(rbloggers_words, n = 20))
+
+```
+
+I'm not surprised by the trendy words, I guess you could mix a few of them up and get a pretty cool title, e.g. "How to make an app in RStudio with an interactive map in it" or "let's analyse data with a regression and plot everything with ggplot2". I think I'm more surprised that in 1,000 tweets, no word is that predominant. 
+
+# When are blog posts published?
+
+I'll start with a warning, R-bloggers tweets appear a bit after the actual blog posts are published, about a few hours I'd say. I actually need a second warning, regarding time of day we have to keep in mind R blogs can be written from everywhere on the planet so in theory R-bloggers is an account that never sleeps. 
+
+
+```{r}
+
+rbloggers <- mutate(rbloggers, wday = as.factor(wday(created_at, label = TRUE)))
+rbloggers <- mutate(rbloggers, hour = as.factor(hour(created_at)))
+rbloggers <- mutate(rbloggers, week = week(created_at))
+rbloggers <- mutate(rbloggers, day = as.Date(created_at))
+```
+
+Note that the reason I can use `week` is that there are no tweets from more than one year ago in my data.
+
+Here I'll show the number of tweets by day of the week.
+
+```{r}
+weekday_dat <- rbloggers %>%
+  group_by(week, wday) %>%
+  summarize(n = n(), created_at = created_at[1]) 
+
+arrange(weekday_dat, desc(n)) %>%
+  head() %>%
+  knitr::kable()
+```
+
+There are a few days with a lot of tweets, which I guess is due to one blog being added and all its posts being shared at once? In any case, I'll remove these days from the figure by not showing outliers.
+
+```{r}
+ggplot(weekday_dat) +
+  geom_boxplot(aes(wday, n),
+               outlier.shape = NA) +
+  scale_y_continuous(limits =  quantile(weekday_dat$n, c(0, 0.9)))
+
+```
+
+I'm not too sure what to conclude as regards a possible day-of-the-week pattern. Maybe I'd need more data, since I don't even have a full year of data:
+
+```{r}
+min(rbloggers$created_at)
+max(rbloggers$created_at)
+```
+
+With more data maybe I could say whether R-bloggers, who I think are often not blogging for work, post more on the week-ends. Thinking of programming, week-ends and weekdays makes me think of [this very good post of Julia Silge's](https://stackoverflow.blog/2017/02/07/what-programming-languages-weekends/).
+Similarly for hour of the day (results not shown) I'm a victim, I think, of the size of my dataset. Moreover, even with a bigger sample, I'd still have trouble finding a circadian rythm since it'd mix tweets from several timezones, without any information about the location of the blog author. Too bad! And with years of data I could even look at seasonality!
+
+# How popular are R-bloggers tweets?
+
+I'll be honest, this is the primary reason why I got interested into R-bloggers' feed. I wondered how famous it made my poor young blog. Well if I have to be honest I also wondered how visible an error of mine would be.
+
+```{r}
+
+ggplot(rbloggers) +
+  geom_histogram(aes(favorite_count))
+
+ggplot(rbloggers) +
+  geom_histogram(aes(retweet_count))
+```
+
+Both look like negative binomial distributions, right? But I don't want to model them, I'm in a minimalistic mood. Note that the median number of retweet is `r median(rbloggers$retweet_count)` and the median number of favorites is  `r median(rbloggers$favorite_count)`. Let's see which were the most popular tweets.
+
+```{r}
+arrange(rbloggers, desc(retweet_count)) %>%
+  head() %>%
+  knitr::kable()
+
+```
+
+I'm happy to report I'd heard of most of these posts. I feel so well informed.
+
+Now I guessed that the number of retweets and favorites were correlated, so I decided to draw a scatterplot which according to one of the posts above is a visualization you should learn.
+
+```{r}
+ggplot(rbloggers) +
+geom_point(aes(retweet_count, favorite_count))
+
+```
+
+Wow! I was so surprised by this plot that I decided to make the same for another R content aggregator account, [R Weekly](https://twitter.com/rweekly_org).
+
+
+```{r, cache = TRUE}
+
+rweekly_org <- get_timeline(user = "rweekly_org",
+                          n = 1000)
+
+ggplot(rweekly_org) +
+geom_point(aes(retweet_count, favorite_count)) +
+  ggtitle("rweekly_org's timeline")
+```
+
+Well here we have far less tweets sadly. I still think there might be a golden ratio of some sort hidden here, so I'll fit linear models to both datasets.
+
+```{r}
+model <- lm(favorite_count ~ retweet_count, data = rbloggers)
+broom::tidy(model) %>% knitr::kable()
+model2 <- lm(favorite_count ~ retweet_count, data = rweekly_org)
+broom::tidy(model2) %>% knitr::kable()
+
+```
+
+Now I just hope that if we collected more data for both accounts, the second coefficient estimate would be close to [the golden ratio](https://en.wikipedia.org/wiki/Golden_ratio), about 1.618. Or I could let social media specialists explain me why retweets and favorites have this correlation. Or where the mistake in my post is, which I'd like to know before it gets sort of viral thanks to R-bloggers.
