@@ -1,0 +1,199 @@
+---
+layout: post
+title: "Hundreds of The Guardian blind dates"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = FALSE)
+```
+
+One of my more or less guilty pleasures is reading [The Guardian blind date report](https://www.theguardian.com/lifeandstyle/series/blind-date) each week. I think I started doing this when living in Cambridge, England for five months. I would buy [i](https://en.wikipedia.org/wiki/I_(newspaper)) every weekday and The Guardian week-end every week-end. I wasn't even dating at the time I discovered The Guardian blind dates but I've always liked their format. 
+
+I get so much into each date report that seeing both participants say they want to meet again makes me ridiculously happy. I like wondering how matches were made, but today I just want to look into the contents of post-date interviews.
+
+<!--more-->
+
+# Scraping the data
+
+The first step was scraping the data from The Guardian's website. Webscraping has gotten quite boring at this point on my blog I guess, but I see no alternative.
+
+## Getting links to all articles
+
+The structure of a link to a blind date was quite unpredictable so I scraped all links from the 13 pages like [this one]("https://www.theguardian.com/lifeandstyle/series/blind-date?page=1").
+
+```{r}
+library("rvest")
+library("stringr")
+library("dplyr")
+library("purrr")
+get_link <- function(link){
+    link <- gsub("<a href=.", "", link)
+    link <- gsub("\".*", "", link)
+    link
+  }
+get_page_links <- function(page_number){
+  url <- paste0("https://www.theguardian.com/lifeandstyle/series/blind-date?page=", page_number)
+  page <- read_html(url)
+  
+  links <- html_nodes(page, "a") 
+  
+  text <- html_text(links)
+  links <- links[which(stringr::str_detect(text, "Blind date"))]
+  
+  links <- purrr::map_chr(links, get_link)
+  links <- unique(links)
+  return(links)
+}
+
+all_links <- purrr::map(1:13, get_page_links)
+all_links <- unlist(all_links)
+
+head(all_links)
+```
+
+Doing this I found `r length(all_links)` links. How exciting!
+
+## Extract content from each article
+
+Then for each article I tried to extract answers to the classical 8 questions. I've seen at least [one example](https://www.theguardian.com/lifeandstyle/2016/dec/10/blind-date-elise-oliver) with not exactly these questions which was a shock although the question "Would you follow them on social media?" is great.
+
+I first wrote down all the classical questions.
+
+```{r}
+questions <- tibble::tibble(number = 1:8,
+                        question = c("First impressions",
+                                     "What did you talk about\\?",
+                                     "Any awkward moments\\?",
+                                     "Good table manners\\?",
+                                     "Best thing about",
+                                     "Did you go on somewhere\\?",
+                                     "Marks out of 10\\?",
+                                     "Would you meet again\\?"))
+
+
+```
+
+Then I defined the function for getting answers to one question, taking into account the fact that this question was maybe not asked.
+
+```{r}
+for_one_question <- function(question, content, link){
+  answer <- content[which(stringr::str_detect(content, question))]
+  answer <- str_replace(answer, ".*<br\\/>", "")
+  answer <- str_replace(answer, question, "")
+  answer <- str_replace(answer, "<\\/p>", "")
+  answer <- str_replace(answer, question, "")
+  answer <- str_replace(answer, "<p><strong>", "")
+  answer <- str_replace(answer, "<\\/strong>", "")
+  answer <- trimws(answer)
+  if(length(answer) > 0){
+    data.frame(question = rep(question, 2),
+               answer = answer, which = 1:2,
+               link = rep(link, 2))
+  }else{
+    NULL
+  }
+  
+} 
+
+
+```
+
+And at last I could scrape all the data, that I gitignored for not making public something I'm not sure I can.
+
+```r
+results <- map(all_links, scrape_page) %>% bind_rows()
+
+readr::write_csv(results, path = "data/2017-03-07-blinddates_allanswers.csv")
+
+```
+
+```{r, echo = FALSE}
+results <- readr::read_csv("data/2017-03-07-blinddates_allanswers.csv")
+head(results) %>% knitr::kable()
+```
+
+For a Guardian blind date fan like myself, getting all this data was really cool.
+
+# Analysing blind dates
+
+This is a quite wrong section title since I won't do any fancy analysis. I want to look at only part of the classical questions.
+
+## So what did they talk about?
+
+For knowing what people talked about in all these dates, I'll look for the most common words. Note that I'm not looking at the consistency between date participants answers (in theory you should have talked about the same things as the other person on your date, but human memory isn't perfect), and I'll use all answers together. I remove stopwords and words related to html formatting or links in the answers.
+
+```{r}
+library("tidytext")
+library("rcorpora")
+what <- filter(results, question == "What did you talk about\\?")
+
+stopwords <- corpora("words/stopwords/en")$stopWords
+
+what_words <- what %>%
+  unnest_tokens(word, answer) %>%
+  count(word, sort = TRUE) %>%
+filter(!word %in% stopwords) %>%
+  filter(!word %in% c("href", "http",
+                      "strong", "link",
+                      "https", "title",
+                      "data", "body",
+                      "class", "underline"))
+knitr::kable(head(what_words, n = 10))
+```
+
+Remember we're looking at `r length(all_links)` blind dates and in particular `r nrow(what)` answers. So these unsurprising common themes are not that common, but then people might have used synonyms.
+
+## What grade did they give each other?
+
+I agree that giving a grade out of 10 to your date can be a bit cruel, especially when this grade will be published in a famous newspaper, but then people get free food and often a nice evening and know about it so I guess it's ok? In any case, I decided to extract the grades they gave each other. For this I had to use regular expressions because some people don't only give a number, they explain their choice.
+
+I keep only dates with two answers to the question.
+
+```{r}
+grades <- filter(results, question == "Marks out of 10\\?")
+get_grade <- function(df){
+  grade <- as.numeric(unlist(str_match_all(df$answer, "[:digit:]*")))
+  grade <- grade[!is.na(grade)]
+  if(length(grade) != 1){
+    999
+  }else{
+    grade
+  }
+}
+grades <- by_row(grades, get_grade,
+                 .to = "grade", .collate = "cols")
+grades <- filter(grades, grade != 999,
+                 grade > 0, grade <= 10)
+grades <- group_by(grades, link)
+grades <- filter(grades, n() == 2)
+grades <- ungroup(grades)
+select(grades, answer, grade) %>% head() %>% knitr::kable()
+```
+
+Now I can see what grades were given and most importantly how different both grades are.
+
+I have `r nrow(grades)` grades which means grades for `r nrow(grades)/2` dates out of `r length(all_links)` dates which is a bit disappointing but hopefully still a representative sample.
+
+```{r}
+library("ggplot2")
+library("hrbrthemes")
+ggplot(grades) +
+  geom_histogram(aes(grade)) +
+  theme_ipsum_rc() +
+  labs(title="Grades given by Guardian blind dates participants",
+       subtitle="See how I use Bob Rudis' nice theme",
+       caption="Thank God for webscraping")
+```
+
+Ok now we all want to know what date was catastrophic enough for someone to get a 2. 
+
+```{r}
+terrible_date <- filter(grades, grade == 2) %>% .$link
+```
+
+## Did they want to meet again?
+
+For finding out whether people would like to meet again, I decided to use sentiment analysis.
