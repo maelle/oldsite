@@ -1,0 +1,11 @@
+base
+xml2
+rvest
+tidyr
+stringr
+dplyr
+purrr
+tidytext
+rcorpora
+ggplot2
+hrbrthemes

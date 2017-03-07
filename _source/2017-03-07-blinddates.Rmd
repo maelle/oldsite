@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Hundreds of The Guardian blind dates"
+title: "Hundreds of Guardian blind dates"
 comments: true
 ---
 ```{r setup, include=FALSE}
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       cache = FALSE)
 ```
 
-One of my more or less guilty pleasures is reading [The Guardian blind date report](https://www.theguardian.com/lifeandstyle/series/blind-date) each week. I think I started doing this when living in Cambridge, England for five months. I would buy [i](https://en.wikipedia.org/wiki/I_(newspaper)) every weekday and The Guardian week-end every week-end. I wasn't even dating at the time I discovered The Guardian blind dates but I've always liked their format. 
+One of my more or less guilty pleasures is reading [The Guardian blind date](https://www.theguardian.com/lifeandstyle/series/blind-date) each week. I think I started doing this when living in Cambridge, England for five months. I would buy [i](https://en.wikipedia.org/wiki/I_(newspaper)) every weekday and The Guardian week-end every week-end. I wasn't even dating at the time I discovered The Guardian blind dates but I've always liked their format. 
 
 I get so much into each date report that seeing both participants say they want to meet again makes me ridiculously happy. I like wondering how matches were made, but today I just want to look into the contents of post-date interviews.
 
@@ -26,6 +26,7 @@ The structure of a link to a blind date was quite unpredictable so I scraped all
 
 ```{r}
 library("rvest")
+library("tidyr")
 library("stringr")
 library("dplyr")
 library("purrr")
@@ -58,7 +59,7 @@ Doing this I found `r length(all_links)` links. How exciting!
 
 ## Extract content from each article
 
-Then for each article I tried to extract answers to the classical 8 questions. I've seen at least [one example](https://www.theguardian.com/lifeandstyle/2016/dec/10/blind-date-elise-oliver) with not exactly these questions which was a shock although the question "Would you follow them on social media?" is great.
+Then for each article I tried to extract answers to 8 questions. I've seen at least [one example](https://www.theguardian.com/lifeandstyle/2016/dec/10/blind-date-elise-oliver) with not exactly these questions which was a shock although the question "Would you follow them on social media?" is great.
 
 I first wrote down all the classical questions.
 
@@ -150,13 +151,16 @@ Remember we're looking at `r length(all_links)` blind dates and in particular `r
 
 I agree that giving a grade out of 10 to your date can be a bit cruel, especially when this grade will be published in a famous newspaper, but then people get free food and often a nice evening and know about it so I guess it's ok? In any case, I decided to extract the grades they gave each other. For this I had to use regular expressions because some people don't only give a number, they explain their choice.
 
-I keep only dates with two answers to the question.
+I keep only dates with two answers to the question, and for each answer I want to have only one possible grade and it has to be between 0 and 10.
 
 ```{r}
 grades <- filter(results, question == "Marks out of 10\\?")
+grades <- mutate(grades, answer = str_replace(answer, "\\/10", ""))
+grades <- mutate(grades, answer = str_replace(answer, "out of 10", ""))
 get_grade <- function(df){
-  grade <- as.numeric(unlist(str_match_all(df$answer, "[:digit:]*")))
+  grade <- as.numeric(unlist(str_match_all(df$answer, "[:digit:][\\.]?[:digit:]?")))
   grade <- grade[!is.na(grade)]
+  grade <- grade[grade <= 10]
   if(length(grade) != 1){
     999
   }else{
@@ -165,17 +169,17 @@ get_grade <- function(df){
 }
 grades <- by_row(grades, get_grade,
                  .to = "grade", .collate = "cols")
-grades <- filter(grades, grade != 999,
-                 grade > 0, grade <= 10)
+
+grades <- filter(grades, grade != 999)
 grades <- group_by(grades, link)
 grades <- filter(grades, n() == 2)
 grades <- ungroup(grades)
 select(grades, answer, grade) %>% head() %>% knitr::kable()
 ```
 
-Now I can see what grades were given and most importantly how different both grades are.
+Now I can see which grades were given and most importantly how different both grades are.
 
-I have `r nrow(grades)` grades which means grades for `r nrow(grades)/2` dates out of `r length(all_links)` dates which is a bit disappointing but hopefully still a representative sample.
+I have `r nrow(grades)` grades which means grades for `r nrow(grades)/2` dates out of `r length(all_links)` dates which is a bit disappointing but hopefully still a representative sample. Also I'm not sure the problem is my code, sometimes people just don't want to give a grade so they give several or write some sort of explanation with _words_.
 
 ```{r}
 library("ggplot2")
@@ -185,15 +189,80 @@ ggplot(grades) +
   theme_ipsum_rc() +
   labs(title="Grades given by Guardian blind dates participants",
        subtitle="See how I use Bob Rudis' nice theme",
-       caption="Thank God for webscraping")
+       caption="Thank God for webscraping and regex")
 ```
 
-Ok now we all want to know what date was catastrophic enough for someone to get a 2. 
+Ok now we all want to know what date was catastrophic enough for someone to get a small grade. 
 
 ```{r}
-terrible_date <- filter(grades, grade == 2) %>% .$link
+filter(grades, grade == min(grade)) %>% .$link
 ```
+
+So now please all stop being sad, the actual answer was "Would it be cheeky to say the same as her and add 1?"! Which shows the limits of my code and how nice people seem to be to each other in this small sample (although maybe they're just nice because they want the other one to be nice as well)? And to answer the participant's question, I'd say it's not cheeky but not analysis-friendly.
+
+Now, did people give each other close grades?
+
+
+```{r}
+grades <- group_by(grades, link)
+grades <- summarize(grades, diff = abs(grade[1] - grade[2]))
+ggplot(grades) +
+  geom_histogram(aes(diff)) +
+  theme_ipsum_rc()+
+  labs(title="Difference between grades")
+
+```
+
+To me it seems grades are pretty close, but more than an agreement it might indicate most people choose some sort of common grade no matter the date because they're not keen on giving grades?
 
 ## Did they want to meet again?
 
-For finding out whether people would like to meet again, I decided to use sentiment analysis.
+For finding out whether people would like to meet again, I decided to use sentiment analysis because I had no other better idea and I think it makes this post quite well-rounded with term frequency, number extraction and sentiment analysis. So please give me a good grade!
+
+I used code from one [`tidytext` vignette](https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html).
+
+```{r, cache = TRUE}
+meet <- filter(results, question == "Would you meet again\\?")
+bing <- get_sentiments("bing")
+
+meetsentiment <- meet  %>%
+  mutate(savedanswer = answer) %>%
+  unnest_tokens(word, answer)%>%
+  inner_join(bing) %>%
+  count(link, which, savedanswer, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) %>%
+  filter(!is.na(sentiment))
+
+```
+
+So how often did one of them want to meet the other again?
+
+```{r}
+ggplot(meetsentiment) +
+  geom_bar(aes(sentiment)) +
+  theme_ipsum_rc()
+```
+
+To get an idea of how good my sentiment analysis is working -- probably not well, let's look at the extremes.
+
+```{r}
+filter(meetsentiment, sentiment <0) %>%
+  head() %>% knitr::kable()
+```
+
+So actually it's not too bad on this small subset although "a shame not to" shouldn't be sorted in this category.
+
+
+```{r}
+filter(meetsentiment, sentiment >3) %>%
+  head() %>% knitr::kable()
+```
+
+Mmmh so here it works much less well. I should maybe weight by length of the sentence because apparently "just as friends" sometimes needs many compliments to make it less hurtful. But then given the efforts I invested in automatically sorting the answers (close to zero), I can't complain and will leave this as is. 
+
+# Last words
+
+I could have done more with this dataset! Ideas I have include also extracting age and profession of the participants, and find which industries are the most represented/compatible using my R [`monkeylearn` package](https://github.com/ropensci/monkeylearn) as I did in my [#first7jobs analysis](http://www.masalmon.eu/2016/10/02/first7jobs-repost/). I have also noticed the address of the restaurant where people had dinner is written at the end of each post, which makes me want to geocode them all with  [`opencage`](https://github.com/ropensci/opencage). But what would motivate me even more would be to use [Scott Chamberlain's `charlatan` package](https://github.com/ropenscilabs/charlatan) to create false names and jobs of dates, and then `rcorpora` to generate their false interviews. If I did that I could read one "Guardian" blind date per day instead of one per week!
+
+To end on a more serious note, Guardian journalists report on other important stuff such as politics and the environment, so if you can please consider [becoming a Guardian Supporter](https://membership.theguardian.com/int/supporter?INTCMP=DOTCOM_HEADER_BECOMEMEMBER_INT). My husband and I did and we're quite happy we did!
