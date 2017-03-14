@@ -12,7 +12,7 @@ permalink:        pretty
 title:            Maëlle
 tagline:          'Not a fish'
 description:      ''
-url:              http://masalmon.github.io
+url:              http://maelle.github.io
 baseurl:          /
 
 author:
@@ -31,10 +31,10 @@ gems:
   - jekyll-feed
 
 github:
-  repo:           https://github.com/masalmon
+  repo:           https://github.com/maelle
 
 twitter_username:     ma_salmon
-github_username:      masalmon
+github_username:      maelle
 linkedin_username:    
 google_plus_username: 
 facebook_username:    
