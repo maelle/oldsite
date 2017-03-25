@@ -1,0 +1,131 @@
+---
+layout: post
+title: "Mapping Bombycilla garrulus annual migration without Twitter"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = FALSE)
+```
+
+Recently a reader left a comment on this blog mentioning [his cool blog post](https://robbriers.github.io/post/2017-03-14-mapping-the-spread-of-a-migratory-bird-using-twitter/) in which he mapped the spread of a migratory bird using Twitter. His data source was [the Waxwings UK account](https://twitter.com/WaxwingsUK) which reports sightings of Waxwings in the UK. I decided to try reproducing his analysis using [the rOpenSci `spocc` package](https://github.com/ropensci/spocc) that interfaces different sources of species occurrence data.
+
+<!--more-->
+
+# Getting the occurrence data
+
+As mentioned above I got the data via `spocc`. I read the README of the Github repo and learnt that it's called `spocc` like *sp*ecies *occ*urrence data. So now I should never forget how many "c" there are in the word _occurrence_.
+
+The `spocc` package interacts with so many data sources that I felt a bit overwhelmed.
+
+Since my goal was to reproduce an article about Waxwings in the UK, I used options of the different data providers to filter results for that specific country.
+
+```{r, cache = TRUE}
+library("spocc")
+ebirdopts <- list(region = 'GB')
+gbifopts <- list(country = 'GB',
+                 limit = 20000)
+inatopts <- list(bounds = c(50, - 10,
+                            60.2, 4))
+waxwings <- occ(query = "Bombycilla garrulus",
+                from = c('gbif','inat','ebird'), gbifopts = gbifopts, 
+                ebirdopts = ebirdopts)
+#> # A tibble: 6 × 6)
+waxwings <- occ2df(waxwings)
+```
+
+I got a data.frame of `r nrow(waxwings)` rows. The provenance of the data was as following:
+
+```{r}
+library("dplyr")
+table(waxwings$prov) %>%
+broom::tidy() %>%
+  knitr::kable()
+
+```
+
+# Cleaning the occurrence data
+
+Now because my MSc of ecology is far behind me (but still close to my heart!) I have no idea how to assess the quality of species occurrence data. And even if I did I would have been delighted by the discovery of another rOpenSci package, [`scrubr`](https://github.com/ropensci/scrubr), whose aim is to clean species occurrence records! 
+
+```{r}
+library("scrubr")
+waxwings <- waxwings %>%
+  coord_impossible() %>%
+  coord_incomplete() %>%
+  coord_unlikely() %>%
+  dedup() %>%
+  date_standardize("%Y-%m-%d") %>%
+  date_missing()
+
+```
+
+I removed the records with impossible, incomplete or unlikely coordinates (unlikely being e.g. a political centroid, impossible coordinates with a too high longitude), I also removed duplicate records and records without a data. This was so easy! I'd like the `scrubr` package to come clean my flat. Now, in real life, I'd probably be even stricter with data cleaning but for the scope of this blog post, using that package without any additionnal check was enough. After all this glorious data cleaning, I had `r nrow(waxwings)` records. 
+
+# Preparing the data a bit more
+
+Since I was interested in seasonal patterns of migration I used the month of observation.
+
+```{r}
+waxwings <- mutate(waxwings,
+                   month = as.factor(lubridate::month(date)))
+```
+
+# Making a map
+
+```{r}
+library("ggplot2")
+library("emojifont")
+load.emojifont('OpenSansEmoji.ttf')
+library("magick")
+library("ggmap")
+library("ggthemes")
+```
+For the map I used bits of Rob Briers' code, and my sort of usual workflow with `magick` and `emojifont` as seen in [this post](http://www.masalmon.eu/2017/02/18/complot/).
+
+```{r, cache = TRUE}
+wax_map <- get_map(location = c(-2, 54.5),
+                   zoom = 5,
+                   maptype = "roadmap", 
+                   crop = FALSE)
+
+```
+
+```{r}
+
+plot_month <- function(month_now,
+                       waxwings, wax_map){
+  month_waxwings <- dplyr::filter_(waxwings,
+                         lazyeval::interp(~ month == month_now))
+  
+  p <- ggmap(wax_map) +
+  geom_label(aes(longitude, latitude),
+             label = emoji("bird"),
+             data = month_waxwings) +
+  theme_map()+
+        scale_x_continuous(limits = c(-11, 4), expand = c(0, 0)) +
+        scale_y_continuous(limits = c(49, 61), expand = c(0, 0))
+  outfil <- paste0("figs/waxwings_", stringr::str_pad(month, width = 2, pad = "0"), ".png")
+  ggsave(outfil, p, width=5, height=5)
+
+  outfil
+                       }
+
+
+
+```
+
+
+```{r}
+library("purrr")
+1:12 %>%
+  map(plot_month, waxwings = waxwings,
+      wax_map = wax_map) %>%
+  map(image_read) %>%
+  image_join() %>%
+  image_animate(fps=1) %>%
+  image_write("gestation.gif")
+
+```
