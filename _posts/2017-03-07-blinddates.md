@@ -52,15 +52,15 @@ head(all_links)
 ```
 
 ```
-## [1] "https://www.theguardian.com/lifeandstyle/2017/mar/04/blind-date-damola-karen"
-## [2] "https://www.theguardian.com/lifeandstyle/2017/feb/25/blind-date-david-mary"  
-## [3] "https://www.theguardian.com/lifeandstyle/2017/feb/18/blind-date-dominique-ed"
-## [4] "https://www.theguardian.com/lifeandstyle/2017/feb/11/blind-date-emma-gervase"
-## [5] "https://www.theguardian.com/lifeandstyle/2017/feb/04/blind-date-james-lucas" 
-## [6] "https://www.theguardian.com/lifeandstyle/2017/jan/28/blind-date-jonny-kit"
+## [1] "https://www.theguardian.com/lifeandstyle/2017/apr/01/blind-date-id-planned-my-escape-dan-jack"           
+## [2] "https://www.theguardian.com/lifeandstyle/2017/mar/25/blind-date-bex-fashion-pr-meets-henry-civil-servant"
+## [3] "https://www.theguardian.com/lifeandstyle/2017/mar/18/blind-date-i-mistook-a-waiter-for-my-date"          
+## [4] "https://www.theguardian.com/lifeandstyle/2017/mar/11/blind-date-we-talked-about-having-children"         
+## [5] "https://www.theguardian.com/lifeandstyle/2017/mar/04/blind-date-damola-karen"                            
+## [6] "https://www.theguardian.com/lifeandstyle/2017/feb/25/blind-date-david-mary"
 ```
 
-Doing this I found 430 links. How exciting!
+Doing this I found 434 links. How exciting!
 
 ## Extract content from each article
 
@@ -81,7 +81,7 @@ questions <- tibble::tibble(number = 1:8,
                                      "Would you meet again\\?"))
 ```
 
-Then I defined the function for getting answers to one question, taking into account the fact that this question was maybe not asked.
+Then I defined the function for getting answers to one question, taking into account the fact that this question was maybe not asked. The function is used in a function for scraping pages.
 
 
 ```r
@@ -103,6 +103,19 @@ for_one_question <- function(question, content, link){
   }
   
 } 
+
+scrape_page <- function(link){
+  print(link)
+  content <- read_html(link)%>% 
+    html_nodes("p") %>%
+    as.character()
+  
+  answers <- map(questions$question, for_one_question,
+                 content = content,
+                 link = link)
+  answers <- suppressWarnings(bind_rows(answers))
+  
+}
 ```
 
 And at last I could scrape all the data, that I gitignored for not making public something I'm not sure I can.
@@ -169,7 +182,7 @@ knitr::kable(head(what_words, n = 10))
 |friends    | 55|
 |travelling | 50|
 
-Remember we're looking at 430 blind dates and in particular 828 answers. So these unsurprising common themes are not that common, but then people might have used synonyms.
+Remember we're looking at 434 blind dates and in particular 828 answers. So these unsurprising common themes are not that common, but then people might have used synonyms.
 
 ## What grade did they give each other?
 
@@ -215,7 +228,7 @@ select(grades, answer, grade) %>% head() %>% knitr::kable()
 
 Now I can see which grades were given and most importantly how different both grades are.
 
-I have 522 grades which means grades for 261 dates out of 430 dates which is a bit disappointing but hopefully still a representative sample. Also I'm not sure the problem is my code, sometimes people just don't want to give a grade so they give several or write some sort of explanation with _words_.
+I have 522 grades which means grades for 261 dates out of 434 dates which is a bit disappointing but hopefully still a representative sample. Also I'm not sure the problem is my code, sometimes people just don't want to give a grade so they give several or write some sort of explanation with _words_.
 
 
 ```r
