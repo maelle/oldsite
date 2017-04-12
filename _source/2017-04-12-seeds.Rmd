@@ -1,0 +1,100 @@
+---
+layout: post
+title: "Sow the seeds, know the seeds"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = FALSE)
+```
+
+When you do simulations, for instance in R, e.g. drawing samples from a distribution, it's best to set a random seed via the function `set.seed` in order to have reproducible results. The function has no default value. I think I mostly use `set.seed(1)`. Last week I received an R script from a colleague in which he used a weird number in `set.seed` (maybe a phone number? or maybe he let his fingers type randomly?), which made me curious about the usual seed values. As in my blog post [about initial commit messages](http://www.masalmon.eu/2017/02/21/firstcommit/) I used the Github API via the [`gh` package](https://github.com/r-pkgs/gh) to get a very rough answer (an answer seedling from the question seed?).
+
+<!--more-->
+
+From Github API search endpoint you can get up to 1,000 results corresponding to a query which in the case of `set.seed` occurrences in R code isn't the whole picture but hopefully a good sample. I wrote a function to treat the output of a query to the API where I take advantage of the [`stringr` package](https://github.com/tidyverse/stringr). I just want the thing inside `set.seed()` from the text matches returned by the API.
+
+```r
+get_seeds_from_matches <- function(item){
+  url <- item$html_url
+  matches <- item$text_matches
+  matches <- unlist(lapply(matches, "[[", "fragment"))
+  matches <- stringr::str_split(matches, "\\\n", simplify = TRUE)
+  matches <- stringr::str_extract(matches, "set\\.seed\\(.*\\)")
+  matches <- stringr::str_replace(matches, "set\\.seed\\(", "")
+  seeds <- stringr::str_replace(matches, "\\).*", "")
+  seeds <- seeds[!is.na(seeds)]
+  tibble::tibble(seed = seeds,
+             url = rep(url, length(seeds)))
+}
+```
+
+After that I made the queries themselves, pausing every 30 pages because of the rate limiting, and adding a `try` around the call in order to stop as soon as I reached the 1,000 results. Not a very elegant solution but I wasn't in a perfectionnist mood. 
+
+Note that the header `"Accept" = 'application/vnd.github.v3.text-match+json'` is very important, without it you wouldn't get the text fragments in the results. 
+
+```r
+library("gh")
+seeds <- NULL
+
+ok <- TRUE
+page <- 1
+while(ok){
+  matches <- try(gh("/search/code", q = "set.seed&language:r",
+                    .token = Sys.getenv("GITHUB_PAT"),
+                    .send_headers = c("Accept" = 'application/vnd.github.v3.text-match+json'),
+                    page = page), silent = TRUE)
+  ok <- !is(matches, "try-error")
+ 
+  if(ok){
+    seeds <- bind_rows(seeds, bind_rows(lapply(matches$items, 
+                                               get_seeds_from_matches)))
+  }
+
+  page <- page + 1
+  # wait 2 minutes every 30 pages
+  if(page %% 30 == 1 & page > 1){
+    Sys.sleep(120)
+  }
+  
+}
+
+save(seeds, file = "data/2017-04-12-seeds.RData.RData")
+```
+
+```{r}
+library("magrittr")
+load("data/2017-04-12-seeds.RData")
+head(seeds) %>%
+  knitr::kable()
+```
+
+I got `r nrow(seeds)` entries, not 1,000 so maybe I lost some seeds in the process or the results weren't perfect. The reason why I also added the URL of the script to the results was to be able to go and look at the code around surprising seeds.
+
+Let's have a look at the most frequent seeds in the sample.
+
+```{r}
+table(seeds$seed) %>%
+  broom::tidy() %>%
+  dplyr::arrange(desc(Freq)) %>%
+  head(n = 12) %>%
+  knitr::kable()
+
+```
+
+So the most prevalent seed is a mystery because I'm not motivated enough to go scrape the code to find if the seed gets assigned a value before, like [in that tweet I saw today](https://twitter.com/millerdl/status/852152963502149638). I was happy that 1 was so popular, maybe it means I belong?
+
+I was surprised by two values. First, 13121098.
+
+```{r}
+dplyr::filter(seeds, seed == "13121098") %>%
+  head(n = 10) %>% 
+  knitr::kable()
+
+```
+
+I went and had a look and it seems most repositories correspond to code learnt in a [Coursera course](https://es.coursera.org/learn/data-cleaning). I have taken a few courses from that specialization and loved it but I don't remember learning about the special seed, too bad. Well I guess everyone used it to reproduce results but what does this number mean in the first place? Who typed it? A cat walking on the keyboard?
+
+The other number that surprised me was 42 but then I remembered it is the ["Answer to the Ultimate Question of Life, the Universe, and Everything" ](https://simple.wikipedia.org/wiki/42_(answer)). I'd therefore say that this might be the coolest random seed. Now I can't tell you whether it produces better results. Maybe it helps when your code actually tries to answer the Ultimate Question of Life, the Universe, and Everything?
