@@ -31,7 +31,7 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 * 2009, __BSc in Biology__, École Normale Supérieure and Université Pierre et Marie Curie, Paris, France.
 
-* 2006-2008, __Classe préparatoire BCPST__, Lycée Clemenceau, Nantes. Mathematics, biology, geology, physics, chemistry, France. 
+* 2006-2008, __Classe préparatoire BCPST__, Lycée Clemenceau, Nantes, France. Mathematics, biology, geology, physics, chemistry. 
 
 ## Languages
 
