@@ -35,7 +35,7 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 
 ## Languages
 
-* I'm fluent in the [R](https://www.r-project.org/) statistical programming language, including package development, [more info on this page](http://www.masalmon.eu/packages/) and [on my Github profile](https://github.com/maelle). I've written many documents with LaTeX, including a [book](http://www.editions-ellipses.fr/product_info.php?products_id=7159) and my PhD thesis. I built this website with [Jekyll](https://jekyllrb.com/) using [this article](http://www.njtierney.com/jekyll/2015/11/11/how-i-built-my-site/). I master googling and copy-pasting from [Stackoverflow](http://stackoverflow.com/) and I'm frustration-resistant. Besides, I'm fond of data surfing.
+* I'm fluent in the [R](https://www.r-project.org/) statistical programming language, including package development, [more info on this page](http://www.masalmon.eu/packages/) and [on my Github profile](https://github.com/maelle). I've written many documents with LaTeX, including a [book](http://www.editions-ellipses.fr/product_info.php?products_id=7159) and [my PhD thesis](https://edoc.ub.uni-muenchen.de/19877/). I built this website with [Jekyll](https://jekyllrb.com/) using [this article](http://www.njtierney.com/jekyll/2015/11/11/how-i-built-my-site/). I am a master at googling and copy-pasting from [Stackoverflow](http://stackoverflow.com/) and I'm frustration-resistant. Besides, I'm fond of data surfing.
 
 <img src="{{base.url}}/assets/video.gif" alt="video" width="300">
 

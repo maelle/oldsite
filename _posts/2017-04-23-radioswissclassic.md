@@ -5,7 +5,7 @@ comments: true
 ---
 
 
-I am not a classical music expert at all, but I happen to have friends who are, and am even married to someone playing the cello (and the ukulele!). I appreciate listening to such music from time to time, in particular Baroque music. A friend made me discover [Radio Swiss classic](http://www.radioswissclassic.ch/en), an online radio playing classical music all day and all night long, with a quite nice variety, and very little speaking between pieces, with no ads (thank you, funders of the radio!). Besides, the voices telling me which piece has just been played are really soothing, so Radio Swiss classic is a good one in my opinion. 
+I am not a classical music expert at all, but I happen to have friends who are, and am even married to someone who plays the cello (and the ukulele!). I appreciate listening to such music from time to time, in particular Baroque music. A friend made me discover [Radio Swiss classic](http://www.radioswissclassic.ch/en), an online radio playing classical music all day and all night long, with a quite nice variety, and very little speaking between pieces, with no ads (thank you, funders of the radio!). Besides, the voices telling me which piece has just been played are really soothing, so Radio Swiss classic is a good one in my opinion. 
 
 Today, instead of anxiously waiting for the results of the French presidential elections, I decided to download the program of the radio in the last years and have a quick look at it, since after all, the website says that the radio aims at relaxing people.
 
