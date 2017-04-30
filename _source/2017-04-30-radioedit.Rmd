@@ -1,0 +1,88 @@
+---
+layout: post
+title: "Radio edit: an improved scraping of and look at Radio Swiss classic program"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = FALSE)
+```
+
+Last week I published a post about [scraping Radio Swiss Classic program](http://www.masalmon.eu/2017/04/23/radioswissclassic/). After that, Bob Rudis wrote [an extremely useful post](https://rud.is/b/2017/04/23/decomposing-composers-with-r/) improving my code a lot and teaching me cool stuff. I don't know why I forgot to add pauses between requests... Really bad behaviour! I will use his code today for re-scraping the data. 
+
+Why re-scrape the data? I mentioned broken links in my post. In fact, each time I hit a broken page, Radio Swiss Classic webmaster received an email. That person received _a lot_ of emails because of me. They repaired the bug explaining these broken pages and contacted me because someone had turned me in (I feel super famous or spied on now), very kindly mentioning they had fixed all pages, and not holding any grudge against me. So let's scrape everything again!
+
+<!--more-->
+
+# Scraping the program
+
+So this is mostly Bob Rudis' code with my clumsy comments alongside his comments. His are always in-line. I really recommend you to read [his post](https://rud.is/b/2017/04/23/decomposing-composers-with-r/)!
+
+```{r, eval = FALSE}
+library("rvest")
+library("purrr")
+library("stringi")
+library("lubridate")
+library("tidyverse")
+
+# using purrr::safely is cool because if the page 
+# is broken you get NULL as an output
+s_read_html <- purrr::safely(read_html)
+
+# helper for brevity
+xtract_nodes <- function(node, css) {
+  html_nodes(node, css) %>% html_text(trim = TRUE)
+}
+
+get_one_day_program <- function(date=Sys.Date(),
+                                base_url="http://www.radioswissclassic.ch/en/music-programme/search/%s",
+                                pb=NULL) {
+  # progress bar magic!
+  if (!is.null(pb)) pb$tick()$print()
+
+  # that's the part where you're nice towards the website
+  Sys.sleep(sample(seq(0,1,0.25), 1)) # ideally, make this sample(5,1)
+
+  date <- ymd(date) # handles case where input is character ISO date
+
+  pg <- s_read_html(sprintf(base_url, format(date, "%Y%m%d")))
+
+  if (!is.null(pg$result)) {
+# go read Bob Rudis' post, in particular to read about
+# the extra selector for "playlist"
+    dplyr::data_frame(
+
+      date = date,
+      time = xtract_nodes(pg$result, 'div[class="playlist"] *
+                                            span[class="time hidden-xs"]') %>% hm(),
+      datetime = update(date, hour = hour(time), minute = minute(time)),
+      artist = xtract_nodes(pg$result, 'div[class="playlist"] * span[class="titletag"]'),
+      title = xtract_nodes(pg$result, 'div[class="playlist"] * span[class="artist"]')
+
+    )
+
+  } else {
+    closeAllConnections()
+    NULL
+  }
+
+}
+
+search_dates <- seq(from = ymd("2008-09-01"), to = ymd("2017-04-22"), by = "1 day")
+
+# how you can make the progress bar work,
+# estimate the time necessary for 5 requests
+pb <- dplyr::progress_estimated(length(search_dates))
+programs_df <- map_df(search_dates, get_one_day_program, pb=pb)
+programs_df <- programs_df %>%
+   dplyr::select(- time) %>%
+   dplyr::mutate(datetime = force_tz(datetime, tz = "Europe/Zurich"))
+programs_df
+
+save(programs_df, file = "data/radioswissclassic_programs_radioedit.RData")
+```
+
+
+I'd like to say thanks again to Bob Rudis, and to Radio Swiss Classic webmaster. I was also surprised and happy to receive an email from a university music theory teacher, who told me he could use such data in class to look at popular music pieces. I really like how this blog thing makes me discover new fields!
