@@ -1,0 +1,10 @@
+base
+magrittr
+ggplot2
+hrbrthemes
+SparseM
+quantreg
+tidytext
+fuzzyjoin
+viridisLite
+viridis
