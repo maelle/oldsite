@@ -1,0 +1,109 @@
+---
+layout: post
+title: "A tribute to Lucy D'Agostino McGowan git commit emoji game"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE)
+```
+
+
+
+<!--more-->
+
+# Getting the commit messages
+
+```{r}
+library("gh")
+library("magrittr")
+lucy_repos <- gh("/users/:username/repos", 
+                 type = "public", 
+                 username = "LucyMcGowan")
+lucy_repos <- vapply(lucy_repos, "[[", "", "name")
+lucy_repos <- tibble::tibble(repos = lucy_repos,
+                             who = "LucyMcGowan")
+lucy_repos_org <- tibble::tibble(repos = c("LFOD.github.io",
+                                           "blog",
+                                           "real-blog"),
+                                 who = "LFOD")
+
+lucy_repos <- dplyr::bind_rows(lucy_repos,
+                               lucy_repos_org)
+
+head(lucy_repos) %>%
+  knitr::kable()
+
+```
+
+
+```{r}
+get_all_lucy_commits <- function(repo, who){
+  # I like seeing the current repo
+  print(repo)
+  
+  # Since I don't know the number of pages
+  # I grow the vectors of messages, dates and authors
+  messages <- NULL
+  authors <- NULL
+  dates <- NULL
+  
+  page <- 1
+  is_still_ok <- TRUE
+  # loop while page still full of content
+  while(is_still_ok[1]){
+    commits <- try(gh("/repos/:owner/:repo/commits",
+                      owner = who,
+                      repo = repo,
+                      page = page))
+    
+    if(class(commits)[1] != "try-error"){
+      is_still_ok <- commits != ""
+    }else{
+      is_still_ok <- FALSE
+    }
+    
+    if(is_still_ok[1]){
+      # get information about commits
+      commit_info <- lapply(commits, "[[", "commit")
+      
+      # commit messages
+      now_messages <- lapply(commit_info, "[[", "message")
+      messages <- c(messages, unlist(now_messages))
+      
+      # date (and time)
+      committer <- lapply(commit_info, "[[", "committer")
+      now_dates <- lapply(committer, "[[", "date")
+      dates <- c(dates, unlist(now_dates))
+      
+      # who committed
+      now_authors <- lapply(commit_info, "[[", "author")
+      now_authors <- lapply(now_authors, "[[", "name")
+      authors <- c(authors, unlist(now_authors))
+      
+      page <- page + 1
+    }
+  }
+  
+  results <- tibble::tibble(commit = messages,
+                           repo = repo,
+                           owner = who,
+                           author = authors,
+                           datetime = dates)
+  # I only want commits from Lucy herself
+  dplyr::filter_(results, 
+                 lazyeval::interp(~ stringr::str_detect(author, "[Ll]ucy")))
+}
+
+commits <- purrr::map2(lucy_repos$repos,
+                       lucy_repos$who, 
+                       get_all_lucy_commits)
+commits <- dplyr::bind_rows(commits)
+commits <- dplyr::mutate(commits, 
+                         encoding = Encoding(commit))
+
+head(commits) %>%
+  knitr::kable()
+```
