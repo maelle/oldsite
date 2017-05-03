@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "A tribute to Lucy D'Agostino McGowan git commit emoji game"
+title: "A tribute to Lucy D'Agostino McGowan's git commit emoji game"
 comments: true
 ---
 
