@@ -160,7 +160,26 @@ I'd tend to say that some industries such as Business Development / Consulting a
 
 I've said I wanted to look at life trajectories. This dataset won't give me any information about the level of the job of course, e.g. whether you start as a clerk and end up leading your company, but I can look at how people move from one category to another. [My husband](http://dacornu.github.io/) gave me a great idea of a circle graph he had seen in a newspaper. For this I used only job descriptions for which a field was predicted with a probability higher than 0.5. I kept only possible transitions where there were present more than 10 times in the data, otherwise we'll end up looking at a [hairball](https://twitter.com/drob/status/768485328244056065). 
 
-![plot of chunk unnamed-chunk-9](/figure/source/2016-10-02-first7jobs-repost/unnamed-chunk-9-1.png)
+
+```
+## Error in library("circlize"): there is no package called 'circlize'
+```
+
+```
+## Error in circos.par(gap.degree = gap.degree): could not find function "circos.par"
+```
+
+```
+## Error in chordDiagram(df, order = names(category), grid.col = category_color, : could not find function "chordDiagram"
+```
+
+```
+## Error in highlight.sector(sector.index = category[b], track.index = 1, : could not find function "highlight.sector"
+```
+
+```
+## Error in circos.clear(): could not find function "circos.clear"
+```
 
 On this circle you see different industries, and the transition between them. The length of the circle occupied by each field depends on the number of jobs belonging to this category, so again the Food and Restauration category is the biggest one. One can see that people taking a position in the Hospitality field, below the circle, often come from the Restauration or the Retail field When they leave this field, they'll often go work in the Restauration field [David Robinson](http://varianceexplained.org/) suggested I find the most common transitions and showed them in directed graphs but I'll keep this idea for later, since this post is quite long already, ah!
 
