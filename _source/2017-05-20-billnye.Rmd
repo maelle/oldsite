@@ -1,0 +1,143 @@
+---
+layout: post
+title: "Which science is all around? #BillMeetScienceTwitter"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE)
+```
+
+I'll admit I didn't really know who Bill Nye was before yesterday. His name sounds a bit like [Bill Nighy's](https://en.wikipedia.org/wiki/Bill_Nighy), that's all I knew. But well science is all around and quite often scientists on Twitter start interesting campaigns. Remember the #actuallylivingscientists whose animals I dedicated [a blog post](http://www.masalmon.eu/2017/02/05/actuallivingscientists/)? This time, the Twitter campaign is the #BillMeetScienceTwitter hashtag with which scientists introduce themselves to the famous science TV host Bill Nye. [Here](https://www.theverge.com/tldr/2017/5/19/15663446/bill-nye-neil-degrasse-tyson-meet-scientists-twitter-hashtag) is a nice article about the movement.
+
+Since I like surfing on Twitter trends, I decided to download a few of these tweets and to use my own R interface to the Monkeylearn machine learning API, [`monkeylearn`](https://github.com/ropensci/monkeylearn) (part of the [rOpenSci project](https://ropensci.org/)!), to classify the tweets in the hope of finding the most represented science fields. So, which science is all around? 
+
+<!--more-->
+
+# Getting the tweets
+
+It might sound a bit like trolling by now, but if you wanna get Twitter data, I recommend using [`rtweet`](https://github.com/mkearney/rtweet/) because it's a good package and because it's going to replace `twitteR` which you might know from other blogs.
+
+I only keep tweets in English, and moreover original ones, i.e. not retweets.
+
+```{r}
+library("rtweet")
+billmeet <- search_tweets(q = "#BillMeetScienceTwitter", n = 18000, type = "recent")
+billmeet <- unique(billmeet)
+```
+
+```{r}
+billmeet <- dplyr::filter(billmeet, lang == "en")
+billmeet <- dplyr::filter(billmeet, is_retweet == FALSE)
+```
+
+I've ended up with `r nrow(billmeet)` tweets.
+
+# Classifying the tweets
+
+I've chosen to use this [taxonomy classifier](https://app.monkeylearn.com/main/classifiers/cl_5icAVzKR/) which classifies text according to generic topics and had quite a few stars on Monkeylearn website. I don't think it was trained on tweets, and well it wasn't trained to classify science topics in particular, which is not optimal, but it had the merit of being readily available. I've still not started training my own algorithms, and anyway, if I did I'd start by creating a very crucial algorithm for determining animal fluffiness on pictures, not text mining stuff. This was a bit off topic, let's go back to science Twitter!
+
+When I decided to use my own package I had forgotten it took charge of cutting the request vector into groups of 20 tweets, since the API only accept 20 texts at a time. I thought I'd have to do that splitting myself, but no, since I did it once in the code of the package, I'll never need to write that code ever again. Great feeling! Look at how easy the code is after cleaning up the tweets a bit! One just needs to wait a bit before getting all results.
+
+```{r}
+
+output <- monkeylearn::monkeylearn_classify(request = billmeet$text,
+                                            classifier_id = "cl_5icAVzKR")
+str(output)
+```
+
+In the output, the package creator decided not to put the whole text corresponding to each line but its digested form itself, digested by the [MD5 algorithm](https://en.wikipedia.org/wiki/MD5). So to join the output to the tweets again, I'll have to first digest the tweet, which I do just copying the code from the package. After all I wrote it. Maybe it was the only time I successfully used `vapply` in my whole life.
+
+```{r}
+billmeet <- dplyr::mutate(billmeet, text_md5 = vapply(X = text,
+                                                    FUN = digest::digest,
+                                                    FUN.VALUE = character(1),
+                                                    USE.NAMES = FALSE,
+                                                    algo = "md5"))
+billmeet <- dplyr::select(billmeet, text, text_md5)
+output <- dplyr::left_join(output, billmeet, by = "text_md5")
+```
+
+Looking at this small sample, some things make sense, other make less sense, either because the classification isn't good or because the tweet looks like spam. Since my own field isn't text analysis, I'll consider myself happy with these results, but I'd be of course happy to read any better version of it.
+
+As in my #first7jobs, I'll make a very arbitrary decision and filter the labels to which a probability higher to 0.5 was attributed. 
+
+```{r}
+output <- dplyr::filter(output, probability > 0.5)
+```
+
+This covers `r round(length(unique(output$text_md5))/nrow(billmeet), digits = 2)` of the original tweets sample. I can only hope it's a representative sample.
+
+How many labels do I have by tweet?
+
+```{r}
+dplyr::group_by(output) %>%
+  dplyr::summarise(nlabels = n()) %>%
+  dplyr::group_by(nlabels) %>%
+  dplyr::summarise(n_tweets = n()) %>%
+  knitr::kable()
+```
+
+Perfect, only one.
+
+# Looking at the results
+
+I know I suck at finding good section titles... At least I like the title of the post, which is a reference to the song Bill Nighy, not Bill Nye, sings in [Love Actually](https://www.youtube.com/watch?v=t_KI-mRyE_0). My husband assumed that science Twitter has more biomedical stuff. Now, even if my results were to support this fact, note that this could as well be because it's easier to classify biomedical tweets.
+
+I'll first show a few examples of tweets for given labels.
+
+```{r}
+dplyr::filter(output, label == "Chemistry") %>%
+  head(n = 5) %>%
+  knitr::kable()
+
+dplyr::filter(output, label == "Aquatic Mammals") %>%
+  head(n = 5) %>%
+  knitr::kable()
+
+dplyr::filter(output, label == "Internet") %>%
+  head(n = 5) %>%
+  knitr::kable()
+
+
+```
+
+Based on that, and on the huge number of internet-labelled tweets, I decided to remove those.
+
+```{r, fig.width = 15, fig.height = 10}
+library("ggplot2")
+library("viridis")
+
+label_counts <- output %>% 
+  dplyr::filter(label != "Internet") %>%
+  dplyr::group_by(label) %>% 
+  dplyr::summarise(n = n()) %>% 
+  dplyr::arrange(desc(n))
+
+label_counts <- label_counts %>%
+  dplyr::mutate(label = ifelse(n < 5, "others", label)) %>%
+  dplyr::group_by(label) %>%
+  dplyr::summarize(n = sum(n)) %>%
+  dplyr::arrange(desc(n))
+
+label_counts <- dplyr::mutate(label_counts,
+                        label = factor(label,
+                                        ordered = TRUE,
+                                        levels = unique(label)))
+
+ggplot(label_counts) +
+  geom_bar(aes(label, n, fill = label), stat = "identity")+
+  scale_fill_viridis(discrete = TRUE, option = "plasma")+
+    theme(axis.text.x = element_text(angle = 90,
+                            hjust = 1,
+                            vjust = 1),
+          text = element_text(size=25),
+          legend.position = "none")
+
+```
+
+In the end, I'm always skeptical when looking at the results of such classifiers, and well at the quality of my sample to begin with -- but then I doubt there ever was a hashtag that was perfectly used to only answer the question and not spam it and comment it (which is what I'm doing). I'd say it seems to support my husband's hypothesis about biomedical stuff. 
+
+I'm pretty sure Bill Nye won't have had the time to read all the tweets, but I think he should save them, or at least all the ones he can get via the Twitter API thanks to e.g. `rtweet`, in order to be able to look through them next time he needs an expert. And in the random sample of tweets he's read, let's hope he was exposed to a great diversity of science topics (and of scientists), although, hey, the health and life related stuff is the most interesting of course. Just kidding. I liked reading tweets about various scientists, science rocks! And these last words would be labelled with "performing arts", perfect way to end this post.
