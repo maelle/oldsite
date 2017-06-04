@@ -39,10 +39,23 @@ head(followers)
 
 The Twitter API limits the number of queries by time unit to the different endpoints. In order to get all the data I needed, I wrote a function for waiting when I had no more remaining queries. In case you wonder, one needs to be a bit patient, but I didn't need to stay in front of my computer the whole time. I'm wondering whether I could make a play on words... Would it be ridiculous to invent the term crock-post?
 
+I added two error handling parts:
+
+* One because apparently sometimes `rtweet::rate_limit` had a weird output (I couldn't reproduce the error so just dealt with it).
+
+* Another one because at one point my husband unplugged our internet box so everything stopped (we're still married). He was the one suggesting me I saved the intermediary results, maybe he had planned this all along.
+
 ```{r}
 
 get_followers_and_wait <- function(user){
-  rates <- rtweet::rate_limit(token = rtweet::get_tokens(),
+  # don't re-query the same data twice
+  exists <- paste0("followers", user, ".RData") %in% dir("data/2017-06-03-twitter")
+  if(exists){
+    # if it already exists use it
+    load(paste0("data/2017-06-03-twitter/followers", user, ".RData"))
+  }else{
+    # otherwise query after checking the rate limit
+    rates <- rtweet::rate_limit(token = rtweet::get_tokens(),
                               query = "followers/ids")
   if(rates$remaining == 0){
     try_sleeping <- try(Sys.sleep(as.numeric(rates$reset)*60), 
@@ -55,6 +68,7 @@ get_followers_and_wait <- function(user){
   followers <- rtweet::get_followers(user = user)
   followers <- dplyr::mutate_(followers, followed_person = ~user)
   save(followers, file = paste0("data/2017-06-03-twitter/followers", user, ".RData"))
+  }
   return(followers)
 }
 
