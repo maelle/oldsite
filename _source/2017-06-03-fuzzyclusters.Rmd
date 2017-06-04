@@ -45,10 +45,16 @@ get_followers_and_wait <- function(user){
   rates <- rtweet::rate_limit(token = rtweet::get_tokens(),
                               query = "followers/ids")
   if(rates$remaining == 0){
-    Sys.sleep(as.numeric(rates$reset)*60)
+    try_sleeping <- try(Sys.sleep(as.numeric(rates$reset)*60), 
+                        silent = TRUE)
+    if(methods::is(try_sleeping, "try-error")){
+      Sys.sleep(15*60)
+    }
+    
   }
   followers <- rtweet::get_followers(user = user)
   followers <- dplyr::mutate_(followers, followed_person = ~user)
+  save(followers, file = paste0("data/2017-06-03-twitter/followers", user, ".RData"))
   return(followers)
 }
 
@@ -65,6 +71,10 @@ I'll first find all combinations of followers. That `combn` function is handy!
 
 ```{r}
 followers_pairs <- as.data.frame(t(combn(followers$user_id, 2)))
+followers_pairs2 <- followers_pairs
+followers_pairs2 <- dplyr::rename(followers_pairs2, V = V1, V1 = V2)
+followers_pairs2 <- dplyr::rename(followers_pairs2, V2 = V)
+followers_pairs <- dplyr::bind_rows(followers_pairs, followers_pairs2)
 head(followers_pairs) 
 
 ```
@@ -128,4 +138,22 @@ There are two main packages offering fuzzy clustering in R, `cluster` via the `f
 
 ## Building the dissimilarity matrix
 
-In the last part of the post I got a data.frame but what I need for using a clustering function is a dissimilarity matrix.
+In the last part of the post I got a data.frame but what I need for using a clustering function is a dissimilarity matrix. I use the `fill = 1` argument in `tidyr::spread` because I know the only missing values are on the diagonale.
+
+```{r}
+followers_distance <- dplyr::select(followers_distances, distance, 
+                                     user1, user2)
+
+dissmatrix <- tidyr::spread(followers_distance, user2, distance, fill = 1)
+dissmatrix <- dplyr::select(dissmatrix, - user1)
+dissmatrix <- as.matrix(dissmatrix)
+rownames(dissmatrix) <- colnames(dissmatrix)
+
+```
+
+## Clustering itself
+
+```{r}
+fannyx <- cluster::fanny(dissmatrix, 4, memb.exp = 1.1,
+                         diss = TRUE)
+```
