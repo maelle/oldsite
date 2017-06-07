@@ -84,8 +84,7 @@ rg_tweets %>%
 ```
 
 ```{r, cache = FALSE}
-class(t(rg_tweets))
-cluster::daisy(as.data.frame(t(rg_tweets)))
+cluster::daisy(as.data.frame(t(dplyr::select(rg_tweets, lang, cld2_language, cld3_language))))
 
 ```
 
