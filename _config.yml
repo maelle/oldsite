@@ -22,7 +22,6 @@ paginate:         5
 
 excerpt_separator: <!--more-->
 
-include: .nojekyll
 
 gems:
   - jekyll-paginate
