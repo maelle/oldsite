@@ -28,6 +28,7 @@ gems:
   - jekyll-gist
   - font-awesome-less
   - jekyll-feed
+  - jekyll-file-exists
 
 github:
   repo:           https://github.com/maelle
