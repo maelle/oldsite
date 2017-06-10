@@ -1,0 +1,160 @@
+---
+layout: post
+title: 'Who is talking about the French Open?'
+comments: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE)
+```
+
+I don't think rOpenSci's Jeroen Ooms can ever top the coolness of his [`magick` package](https://github.com/ropensci/magick) but I have to admit other things he's developped are not bad at all. He's recently been working on interfaces to Google compact language detectors 2 and 3 (the latter being more experimental). I saw [this cool use case](http://marcbeldata.github.io/Language-use-MP-Twitter/) and started thinking about other possible applications of the packages. 
+
+I was very sad when I realized it was too late to try and download Eurovision tweets but then I also remembered there's [this famous tennis tournament](https://en.wikipedia.org/wiki/French_Open) going on right now, about which people probably tweet in various languages. I don't follow the French Open myself, but it seemed interesting to find out which languages were the most prevalent, and whether the results from the [`cld2`](https://github.com/ropensci/cld2) and [`cld3`](https://github.com/ropensci/cld3) packages are similar and whether they're similar to the language detection results from Twitter itself.
+
+
+<!--more-->
+
+# Getting the tweets
+
+I'm using my usual `rtweet` recipe. I no longer need to open my eyes when downloading tweets.
+
+```{r, eval = FALSE}
+rg_tweets <- rtweet::search_tweets(q = "#RolandGarros2017",
+                                   include_rts = FALSE,
+                                   n = 18000)
+save(rg_tweets, file = "data/2017-06-07-rolandgarros.RData")
+```
+
+```{r, echo = FALSE}
+load("data/2017-06-07-rolandgarros.RData")
+```
+
+
+I got `r nrow(rg_tweets)` tweets.
+
+# Using the language detectors
+
+I decided to first clean the tweets a bit, removing hashtags, mentions, and at least part of the links.
+
+```{r}
+rg_tweets <- dplyr::mutate(rg_tweets,
+                           text = stringr::str_replace_all(text, "#.*$", ""),
+                           text = stringr::str_replace_all(text, "https.*$", ""),
+                           text = stringr::str_replace_all(text, "@.*$", ""),
+                           text = stringr::str_replace_all(text, "#.* ", ""),
+                           text = stringr::str_replace_all(text, "https.* ", ""),
+                           text = stringr::str_replace_all(text, "@.* ", ""))
+
+```
+
+Today I'm a happy naive user of language detectors, but more technical details can be found in their [respective](https://github.com/CLD2Owners/cld2) [README's](https://github.com/google/cld3#readme). It'd be difficult to have an easier interface than the two `cld2` and `cld3` packages. They're also fast, although I haven't timed the following chunk so you'll have to believe me or test the packages yourselves.
+
+```{r}
+rg_tweets <- dplyr::mutate(rg_tweets, 
+                           cld2_language = cld2::detect_language(text,
+                                                                 lang_code = TRUE), 
+                           cld3_language = cld3::detect_language(text))
+
+```
+
+Before analysing the results, I'll transform the Twitter detected language a bit: it's not NA for undertemined language, it's "und".
+
+```{r}
+rg_tweets <- dplyr::mutate(rg_tweets, 
+                           lang = ifelse(lang == "und", NA, lang))
+
+```
+
+
+# Looking at detected languages
+
+Twitter output a language for `r round(sum(!is.na(rg_tweets$lang))/nrow(rg_tweets), digits = 2)*100`% of the tweets, `cld2` for `r round(sum(!is.na(rg_tweets$cld2_language))/nrow(rg_tweets), digits = 2)*100`% and `cld3` for `r round(sum(!is.na(rg_tweets$cld3_language))/nrow(rg_tweets), digits = 2)*100`% of them.
+
+Let's see a few cases in which Twitter outputs a language whereas the other don't.
+
+As a side note, I learnt how to insert a `DT::datable` from Daniela Vasquez after admiring one she had put [in this cool blog post](screenshot.force = FALSE). This was an adventure in htmlwidgets hell. I started looking at Daniela's Github blog repo, then talked with her on the R-Ladies slack, and I told her I'd do more the next day. I woke up to a PR solving all problems! Thanks a lot Daniela, and also thanks to your husband!
+
+```{r, screenshot.force = FALSE, cache = FALSE}
+library("magrittr")
+rg_tweets %>%
+  dplyr::filter(is.na(cld2_language), is.na(cld3_language)) %>%
+  dplyr::select(text, lang, cld2_language,
+         cld3_language)%>%
+  head(n = 50) %>%
+  DT::datatable()
+
+```
+
+It seems that the languages with undetermined languages via `cld2` and `cld3` are quite short. The Twitter language detector might be more focused at short sentences which well given the length of tweets wouldn't be surprising. Moreover, maybe it often inputs a language even when uncertain. If we take the example of the word "Merci", it's French but also used in Catalan at least in Barcelona, so to me that seems uncertain. Some other tweets to which Twitter but not the other language detectors associated a language are a mix of languages.
+
+Let's have a look at lines with disagreements when no language information is missing.
+
+```{r, cache = FALSE, screenshot.force = FALSE}
+rg_tweets %>%
+  dplyr::filter(!is.na(lang),
+                !is.na(cld2_language),
+                !is.na(cld3_language)) %>%
+  dplyr::group_by(text) %>%
+  dplyr::filter(length(unique(c(lang, cld2_language,
+                              cld3_language))) != 1) %>%
+  head(n = 50) %>%
+  dplyr::select(text, lang, cld2_language,
+         cld3_language)%>%
+  DT::datatable()
+
+```
+
+Similarly I think these tweets are quite short. Moreover, languages seem to often be different but not _that_ different, e.g. "es" (Spanish) and "ca" (Catalan) or "es" and "gl" (Galician). I sometimes make similar mistakes, when I say I've heard a "Nordic language"" because I couldn't identify it further than "not Swedish" (which I should be able to recognize).
+
+I can also look at dissimilarities, computed on tweets with determined language.
+
+```{r}
+dplyr::select(rg_tweets, lang, cld2_language, cld3_language) %>%
+  dplyr::mutate_all(dplyr::funs(as.factor(.))) %>%
+  t() %>%
+  as.data.frame() %>%
+cluster::daisy()
+```
+
+
+Unsurprisingly there's a worse agreement between `cld3` results and the other two ones than between `cld2` and Twitter. I say I'm not surprised because `cld3` is a still experimental language detector.
+
+# Representing languages
+
+I'm going to assume that if Twitter and `cld2` agree on the language assigned to a tweet, then it's quite reliable.
+
+
+```{r}
+agreed <- dplyr::filter(rg_tweets,
+                        lang == cld2_language)
+```
+
+I'm therefore only considering `r nrow(agreed)` tweets out of the original `r nrow(rg_tweets)` tweets.
+
+```{r}
+agreed <- dplyr::group_by(agreed, lang)
+agreed <- dplyr::summarize(agreed, tweets_count = n())
+agreed <- dplyr::ungroup(agreed)
+agreed <- dplyr::arrange(agreed, desc(tweets_count))
+agreed <- dplyr::mutate(agreed, lang = factor(lang, ordered = TRUE, levels = unique(lang))) 
+```
+
+Let's plot the results.
+
+
+```{r, fig.width = 10}
+library("ggplot2")
+library("hrbrthemes")
+ggplot(agreed) +
+  geom_col(aes(lang, tweets_count)) +
+  theme_ipsum(base_size = 20,
+              axis_title_size = 20) +
+  xlab("Detected language") +
+  ylab("No. of tweets in the sample")
+```
+
+The most represented languages, English, French and Spanish are surely a result of who's on Twitter, what are the most spoken languages on Earth, who's interested in tennis (or the tennis players) and who's awake when the tournament happens. One way to control for the timezone of the tournament would be to stream tweets during each of the tournaments of the [tennis Grand Slam](https://en.wikipedia.org/wiki/Grand_Slam_(tennis)). Another extension of this small blog post would be to look for players names in tweets and to then see if one can find an association between the most mentioned players in a language and the nationality of these players. This could even be coupled to a sentiment analysis (you could support one player and criticize the other players). Then again, that's something that'd be even more interesting in my opinion if applied to Eurovision contestants instead!
