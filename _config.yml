@@ -22,13 +22,14 @@ paginate:         5
 
 excerpt_separator: <!--more-->
 
+include: .nojekyll
+
 gems:
   - jekyll-paginate
   - kramdown 
   - jekyll-gist
   - font-awesome-less
   - jekyll-feed
-  - jekyll-file-exists
 
 github:
   repo:           https://github.com/maelle
