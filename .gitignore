@@ -1,6 +1,12 @@
 _source/data/2017-03-07-blinddates_allanswers.csv
 _source/data/2017-03-19-facesofr_users.csv
 _source/data/2017-03-19-facesofr_users_images/
+_source/data/2017-06-03-twitter/
+_source/twitter.R
+lala.RData
+.httr-oauth
+.Rhistory
+.RData
 # Ignore docs files
 _gh_pages
 _site

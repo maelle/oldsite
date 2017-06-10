@@ -33,7 +33,7 @@ I got `r nrow(rg_tweets)` tweets.
 
 # Using the language detectors
 
-Today I'm a happy naive user of language detectors, but more technical details can be found in their [respective](https://github.com/CLD2Owners/cld2) [README's](https://github.com/google/cld3#readme). It'd be difficult to have an easier interface than the two `cld2` and `cld3` packages.
+Today I'm a happy naive user of language detectors, but more technical details can be found in their [respective](https://github.com/CLD2Owners/cld2) [README's](https://github.com/google/cld3#readme). It'd be difficult to have an easier interface than the two `cld2` and `cld3` packages. They're also fast, although I haven't timed the following chunk so you'll have to believe me or test the packages yourselves.
 
 ```{r}
 rg_tweets <- dplyr::mutate(rg_tweets, 
@@ -46,25 +46,25 @@ rg_tweets <- dplyr::mutate(rg_tweets,
 
 # Looking at detected languages
 
-Twitter output a language for `r round(sum(!is.na(rg_tweets$lang))/nrow(rg_tweets), digits = 2)*100`% of the tweets, `cld2` for `r round(sum(!is.na(rg_tweets$cld2_language))/nrow(rg_tweets), digits = 2)*100` and `cld3` for `r round(sum(!is.na(rg_tweets$cld3_language))/nrow(rg_tweets), digits = 2)*100`.
+Twitter output a language for `r round(sum(!is.na(rg_tweets$lang))/nrow(rg_tweets), digits = 2)*100`% of the tweets, `cld2` for `r round(sum(!is.na(rg_tweets$cld2_language))/nrow(rg_tweets), digits = 2)*100`% and `cld3` for `r round(sum(!is.na(rg_tweets$cld3_language))/nrow(rg_tweets), digits = 2)*100`% of them.
 
-In the following I'm using a pipeline trick for not having to write the same code three times without having to write a function either.
+Let's see a few cases in which Twitter outputs a language whereas the other don't.
 
-```{r}
+As a side note, I learnt how to insert a `DT::datable` from Daniela Vasquez after admiring one she had put [in this cool blog post](screenshot.force = FALSE). Thanks a lot Daniela!
+
+```{r, screenshot.force = FALSE, cache = FALSE}
 library("magrittr")
-see_most_used_languages <- . %>%
-  table() %>%
-  broom::tidy() %>%
-  dplyr::arrange(desc(Freq)) %>%
-  head(n = 10) %>%
-  knitr::kable()
+rg_tweets %>%
+  dplyr::filter(is.na(cld2_language), is.na(cld3_language)) %>%
+  dplyr::select(text, lang, cld2_language,
+         cld3_language) %>%
+  DT::datatable()
 
-rg_tweets$lang %>% see_most_used_languages
-rg_tweets$cld2_language %>% see_most_used_languages
-rg_tweets$cld3_language %>% see_most_used_languages
 ```
 
-Let's have a look at lines with disagreements.
+
+
+Let's have a look at lines with disagreements when no language information is missing.
 
 ```{r}
 #rg_tweets <- dplyr::mutate(rg_tweets, 
@@ -78,12 +78,13 @@ rg_tweets %>%
                               cld3_language))) != 1) %>%
   head(n = 50) %>%
   dplyr::select(text, lang, cld2_language,
-         cld3_language)%>%
-  knitr::kable()
+         cld3_language)
 
 ```
 
-```{r, cache = FALSE}
+
+
+```{r}
 cluster::daisy(as.data.frame(t(dplyr::select(rg_tweets, lang, cld2_language, cld3_language))))
 
 ```
