@@ -78,7 +78,7 @@ Twitter output a language for `r round(sum(!is.na(rg_tweets$lang))/nrow(rg_tweet
 
 Let's see a few cases in which Twitter outputs a language whereas the other don't.
 
-As a side note, I learnt how to insert a `DT::datable` from Daniela Vasquez after admiring one she had put [in this cool blog post](screenshot.force = FALSE). This was an adventure in htmlwidgets hell. I started looking at Daniela's Github blog repo, then talked with her on the R-Ladies slack, and I told her I'd do more the next day. I woke up to a PR solving all problems! Thanks a lot Daniela, and also thanks to your husband!
+As a side note, I learnt how to insert a `DT::datable` from Daniela Vasquez after admiring one she had put [in this cool blog post](screenshot.force = FALSE). This was an adventure in htmlwidgets hell. I started looking at Daniela's Github blog repo, then talked with her on the R-Ladies slack, and I told her I'd do more the next day. I woke up to a PR solving all problems! Thanks a lot Daniela, and also thanks to your husband! Update: Daniela's husband Gervasio came up with [a fix](https://github.com/maelle/maelle.github.io/pull/3) not involving custom Jekyll plugins after I realized my site couldn't be built on Github pages... I am so thankful for their help!
 
 ```{r, screenshot.force = FALSE, cache = FALSE}
 library("magrittr")
