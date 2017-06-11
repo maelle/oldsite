@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 I don't think rOpenSci's Jeroen Ooms can ever top the coolness of his [`magick` package](https://github.com/ropensci/magick) but I have to admit other things he's developped are not bad at all. He's recently been working on interfaces to Google compact language detectors 2 and 3 (the latter being more experimental). I saw [this cool use case](http://marcbeldata.github.io/Language-use-MP-Twitter/) and started thinking about other possible applications of the packages. 
 
-I was very sad when I realized it was too late to try and download Eurovision tweets but then I also remembered there's [this famous tennis tournament](https://en.wikipedia.org/wiki/French_Open) going on right now, about which people probably tweet in various languages. I don't follow the French Open myself, but it seemed interesting to find out which languages were the most prevalent, and whether the results from the [`cld2`](https://github.com/ropensci/cld2) and [`cld3`](https://github.com/ropensci/cld3) packages are similar and whether they're similar to the language detection results from Twitter itself.
+I was very sad when I realized it was too late to try and download tweets about the Eurovision song context but then I also remembered there's [this famous tennis tournament](https://en.wikipedia.org/wiki/French_Open) going on right now, about which people probably tweet in various languages. I don't follow the French Open myself, but it seemed interesting to find out which languages were the most prevalent, and whether the results from the [`cld2`](https://github.com/ropensci/cld2) and [`cld3`](https://github.com/ropensci/cld3) packages are similar and whether they're similar to the language detection results from Twitter itself.
 
 
 <!--more-->
@@ -52,6 +52,8 @@ rg_tweets <- dplyr::mutate(rg_tweets,
 ```
 
 Today I'm a happy naive user of language detectors, but more technical details can be found in their [respective](https://github.com/CLD2Owners/cld2) [README's](https://github.com/google/cld3#readme). It'd be difficult to have an easier interface than the two `cld2` and `cld3` packages. They're also fast, although I haven't timed the following chunk so you'll have to believe me or test the packages yourselves.
+
+Note that `cld2` and `cld3` both have functions for outputting several languages instead of one, with the associated reliability, but I won't use them since I want a direct comparison with the Twitter output of one language per tweet.
 
 ```{r}
 rg_tweets <- dplyr::mutate(rg_tweets, 
@@ -157,4 +159,4 @@ ggplot(agreed) +
   ylab("No. of tweets in the sample")
 ```
 
-The most represented languages, English, French and Spanish are surely a result of who's on Twitter, what are the most spoken languages on Earth, who's interested in tennis (or the tennis players) and who's awake when the tournament happens. One way to control for the timezone of the tournament would be to stream tweets during each of the tournaments of the [tennis Grand Slam](https://en.wikipedia.org/wiki/Grand_Slam_(tennis)). Another extension of this small blog post would be to look for players names in tweets and to then see if one can find an association between the most mentioned players in a language and the nationality of these players. This could even be coupled to a sentiment analysis (you could support one player and criticize the other players). Then again, that's something that'd be even more interesting in my opinion if applied to Eurovision contestants instead!
+The most represented languages, English, French and Spanish are surely a result of who's on Twitter, what are the most spoken languages on Earth, who's interested in tennis (or the tennis players) and who's awake when the tournament happens. One way to control for the timezone of the tournament would be to stream tweets during each of the tournaments of the [tennis Grand Slam](https://en.wikipedia.org/wiki/Grand_Slam_(tennis)). Another extension of this small blog post would be to look for players names in tweets and to then see if one can find an association between the most mentioned players in a language and the nationality of these players. This could even be coupled to a sentiment analysis (you could support one player and criticize the other players). Then again, that's something that'd be even more interesting in my opinion if applied to Eurovision contestants instead! Next year maybe...
