@@ -8,7 +8,9 @@ comments: true
 knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       warning = FALSE, 
-                      cache = TRUE)
+                      cache = TRUE,
+                      fig.cap = "")
+
 ```
 
 I don't think rOpenSci's Jeroen Ooms can ever top the coolness of his [`magick` package](https://github.com/ropensci/magick) but I have to admit other things he's developped are not bad at all. He's recently been working on interfaces to Google compact language detectors 2 and 3 (the latter being more experimental). I saw [this cool use case](http://marcbeldata.github.io/Language-use-MP-Twitter/) and started thinking about other possible applications of the packages. 
@@ -78,7 +80,7 @@ Twitter output a language for `r round(sum(!is.na(rg_tweets$lang))/nrow(rg_tweet
 
 Let's see a few cases in which Twitter outputs a language whereas the other don't.
 
-As a side note, I learnt how to insert a `DT::datable` from Daniela Vasquez after admiring one she had put [in this cool blog post](screenshot.force = FALSE). This was an adventure in htmlwidgets hell. I started looking at Daniela's Github blog repo, then talked with her on the R-Ladies slack, and I told her I'd do more the next day. I woke up to a PR solving all problems! Thanks a lot Daniela, and also thanks to your husband! Update: Daniela's husband Gervasio came up with [a fix](https://github.com/maelle/maelle.github.io/pull/3) not involving custom Jekyll plugins after I realized my site couldn't be built on Github pages... I am so thankful for their help!
+As a side note, I learnt how to insert a `DT::datatable` from Daniela Vázquez after admiring one she had put [in this cool blog post](https://d4tagirl.com/2017/05/how-do-you-feel-about-last-week-tonight). This was an adventure in htmlwidgets hell. I started looking at Daniela's Github blog repo, then talked with her on the R-Ladies slack, and I told her I'd do more the next day. I woke up to a PR solving all problems! Thanks a lot Daniela, and also thanks to your husband! Update: Daniela's husband Gervasio came up with [a fix](https://github.com/maelle/maelle.github.io/pull/3) not involving custom Jekyll plugins after I realized my site couldn't be built on Github pages... I am so thankful for their help!
 
 ```{r, screenshot.force = FALSE, cache = FALSE}
 library("magrittr")
