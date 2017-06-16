@@ -27,7 +27,7 @@
   <!-- htmlwidgets dependencies -->
   {% assign dep_file = page.url | split: '/' | last | prepend : 'htmlwidgets/' | append : '.html' %}
   {% if page.layout == 'post' %}
-  <!--{% include {{dep_file}} %}-->
+  {% include {{dep_file}} %}
  {% endif %}
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
