@@ -88,7 +88,7 @@ How does one use it? After installing it, run `pkgdown::init()` and `pkgdown::bu
 
 Now, how do you present it to the world? In theory I guess you could publish it anywhere but the really handy thing is to have it as a Github page, if you develop your package on Github. For this you just need to change the settings of the repository to make master/docs the source for Github pages.
 
-![](/figure/source/2017-06-17-automatictools/gh.jpeg)
+![](/figure/source/2017-06-17-automatictools/gh.png)
 
 Unless you typically redirect all links from your Github account to your domain, your package will live at account_name.github.io/package_name. See for instance [this nice package of Dirk Schumacher's](https://github.com/dirkschumacher/ompr) whose website is [here](https://dirkschumacher.github.io/ompr/).
 
