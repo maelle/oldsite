@@ -96,17 +96,18 @@ head(followers_pairs)
 Now I'll define the function for computing the distance corresponding to each pair.
 
 ```{r}
-compute_distance <- function(pair, followers_followers){
+compute_distance <- function(user1, user2, 
+                             followers_followers = followers_followers){
   distance <- 2
   followers1 <- dplyr::filter_(followers_followers,
-                                ~followed_person == pair$V1)
-  if(pair$V2 %in% followers1$user_id){
+                                ~followed_person == user1)
+  if(user2 %in% followers1$user_id){
     distance <- distance - 1
   }
   
   followers2 <- dplyr::filter_(followers_followers,
-                                ~followed_person == pair$V2)
-  if(pair$V1 %in% followers2$user_id){
+                                ~followed_person == user2)
+  if(user1 %in% followers2$user_id){
     distance <- distance - 1
   }
   
@@ -118,18 +119,16 @@ compute_distance <- function(pair, followers_followers){
 After that it's time to apply the function to each row of `followers_pairs`.
 
 ```{r}
-followers_distances <- purrrlyr::by_row(followers_pairs,
-                                        compute_distance,
-                                        followers_followers = followers_followers,
-                                        .to = "distance",
-                                        .collate = "cols")
+followers_distances <- sapply(followers$user_id[1:10], function(x) sapply(followers$user_id[1:10], compute_distance,
+                                                                          followers_followers = followers_followers))
+  print(followers_distances)
 ```
 
 ## Replacing user_id with names
 
 The table I got is nice but in the end I want to use the names of accounts, not their user_id's which mean nothing to me.
 
-```{r}
+```{r, eval = FALSE}
 followers_names <- rtweet::lookup_users(followers$user_id)
 followers_names <- dplyr::select_(followers_names, quote(user_id),
                                   quote(name))
