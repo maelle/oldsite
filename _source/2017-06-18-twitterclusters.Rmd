@@ -93,11 +93,10 @@ head(followers_pairs)
 
 ```
 
-Now I'll define the function for computing the distance corresponding to each pair.
+Now I'll define the function for computing the distance corresponding to each pair, and its vectorized version.
 
 ```{r}
-compute_distance <- function(user1, user2, 
-                             followers_followers = followers_followers){
+compute_distance_pair <- function(user1, user2, followers_followers){
   distance <- 2
   followers1 <- dplyr::filter_(followers_followers,
                                 ~followed_person == user1)
@@ -114,35 +113,30 @@ compute_distance <- function(user1, user2,
   return(distance)
 }
 
+compute_distance <- function(user1, user2, followers_followers){
+  purrr::map2_dbl(user1, user2, compute_distance_pair, followers_followers = followers_followers)
+}
 ```
 
-After that it's time to apply the function to each row of `followers_pairs`.
+After that it's time to apply the function to each possible combination of followers. I discovered the `outer` function when writing this post, it takes all combinations of the first two arguments and then applies `FUN` to each pair. It's really handy
 
 ```{r}
-followers_distances <- sapply(followers$user_id[1:10], function(x) sapply(followers$user_id[1:10], compute_distance,
-                                                                          followers_followers = followers_followers))
-  print(followers_distances)
+followers_distances <- outer(followers$user_id, followers$user_id, FUN = "compute_distance", followers_followers = followers_followers)
 ```
 
 ## Replacing user_id with names
 
-The table I got is nice but in the end I want to use the names of accounts, not their user_id's which mean nothing to me.
+In the end I want to use the names of accounts, not their user_id's which mean nothing to me.
 
 ```{r, eval = FALSE}
 followers_names <- rtweet::lookup_users(followers$user_id)
 followers_names <- dplyr::select_(followers_names, quote(user_id),
                                   quote(name))
-followers_distances <- dplyr::left_join(followers_distances,
-                                        followers_names,
-                                        by = c("V1" = "user_id"))
-followers_distances <- dplyr::rename_(followers_distances, .dots = c(user1 = "name"))
+```
 
-followers_distances <- dplyr::left_join(followers_distances,
-                                        followers_names,
-                                        by = c("V2" = "user_id"))
-followers_distances <- dplyr::rename_(followers_distances, .dots = c(user2 = "name"))
-followers_distances <- dplyr::arrange_(followers_distances, quote(distance))
-head(followers_distances)
+```{r}
+
+
 ```
 
 # Fuzzy clustering!
