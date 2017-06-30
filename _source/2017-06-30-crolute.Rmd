@@ -53,7 +53,7 @@ Now the CRAN version of `ropenaq` is a proud reverse dependency of `crul` (yes m
 
 # Other arguments in favour of `crul`
 
-So asynchronous requests are a big argument in my opinion to use `crul` instead of `httr` as an API package developper but I've also listed a few other reasons. Note that I don't get any money for saying any of this, this is my most honest opinion.
+So asynchronous requests are a big argument in my opinion to use `crul` instead of `httr` as an API package developer but I've also listed a few other reasons. Note that I don't get any money for saying any of this, this is my most honest opinion.
 
 ## R6 classes!
 
