@@ -1,0 +1,80 @@
+---
+layout: post
+title: "Who are the Swedish radio P1 summer guests?"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+This week, a [very promising new R blog](https://eric.netlify.com/) was launched, namely the blog of Eric Persson a.k.a as [expersso on Twitter](https://twitter.com/expersso). I had really been looking forward to this because expersso's code screenshots have always been [quite cool](https://twitter.com/expersso/status/870661615989002240), so seeing his no longer being limited to them is awesome! His first articles series is about a game, you should really [check it out](https://eric.netlify.com/2017/08/04/implementing-nim-in-r/). (_Note: if you post screenshots of R code on Twitter, have a look at Sean Kross's [`codefinch` package](https://github.com/ropenscilabs/codefinch)!_).
+
+Because I'm a nosy person I asked Eric whether he was Swedish, his last name being quite Swedish-looking in my opinion. He is, which made me wonder about Swedish blog topics and actually decided to use one Swedish topic I came up with, the [summer guests of the Swedish radio P1](http://sverigesradio.se/sida/artikel.aspx?programid=2071&artikel=4833403)! Every summer since 1959, P1 selects a bunch of famous or interesting people and have them record a bit more than one hour program where they're free to discuss what they want (important events of their life for instance) and to choose the musical breaks (which you don't get to listen entirely to in the online version because of copyright stuff). The program is then broadcasted in the summer, one guest a day from the end of June to the beginning of August. There's even a winter version now but I'll ignore it because it's too hot here in Barcelona to even think about winter.
+
+It's a very cool radio program in my opinion. I discovered it at the end of my 5-month research stay in Gothenburg in 2010 and decided it'd be a way to keep my Swedish skills up to date. I haven't listened to that many guests but I really enjoy it when I do, and I like how diverse the list of guests is. In this post, I'll actually try to have a look at the occupations of the guests via Wikipedia data!
+
+<!--more-->
+
+# How to get the data?
+
+In order to answer my question I needed a list of all summer guests, and their occupations. I first thought I'd resort to webscraping P1 website, which would have been a good way to provide expersso with an opportunity to give me some [constructive](https://twitter.com/expersso/status/839395958316232704) [feedback](https://twitter.com/expersso/status/893530164482756609). However after websurfing a bit to assess my options, I soon realize I could use Wikipedia data obtained through APIs rather than [webscraping as in my posts about famous dead people](http://www.masalmon.eu/2017/02/12/wikideaths3_scraping/). Here was my strategy.
+
+## Getting the list of all summer guests from 1959
+
+I downloaded the table of all summer guests from 1959 from [this page](http://sverigesradio.se/sida/artikel.aspx?programid=2071&artikel=4833403), which gave me their names and the dates of their episode(s) -- yeah some people are invited back.
+
+```{r}
+# all summer guests
+sommargaester <- readr::read_csv("p1sommar.csv", col_names = FALSE, 
+                                 locale = readr::locale(encoding = "latin1"))
+
+# get their names
+sommargaester_names <- unique(sommargaester$X1)
+
+# for putting names in the right order for later queries
+transform_name <- function(name){
+  paste(stringr::str_split(name, ",",
+                           simplify = TRUE)[2],
+        stringr::str_split(name, ",",
+                           simplify = TRUE)[1])
+}
+
+pretty_sommargaester_names <- purrr::map_chr(sommargaester_names, transform_name)
+sommargaester_names <- tibble::tibble(name = pretty_sommargaester_names,
+                                      X1 = sommargaester_names)
+sommargaester <- dplyr::left_join(sommargaester, sommargaester_names,
+                                  by = "X1")
+
+sommargaester <- dplyr::select(sommargaester, - X1)
+# transform the date
+sommargaester <- tidyr::gather(sommargaester, "rep", "date", X2:X7)
+sommargaester <- dplyr::group_by(sommargaester, name)
+sommargaester <- dplyr::mutate(sommargaester, rep = 1:n())
+sommargaester <- dplyr::ungroup(sommargaester)
+
+sommargaester <- dplyr::filter(sommargaester, !is.na(date))
+# remove winter
+sommargaester <- dplyr::filter(sommargaester, !stringr::str_detect(date, "V"))
+# remove repeat episodes
+sommargaester <- dplyr::filter(sommargaester, !stringr::str_detect(date, "R"))
+
+
+# transform the date to a format with a non ambiguous year
+sommargaester <- dplyr::mutate(sommargaester, date = as.numeric(date))
+sommargaester <- dplyr::mutate(sommargaester, date = ifelse(date > 180000, paste0("19", date),
+                                                            ifelse(date < 100000,
+                                                                   paste0("200", date),
+                                                                   paste0("20", date))))
+sommargaester <- dplyr::mutate(sommargaester, pretty_date = lubridate::ymd(date))
+
+knitr::kable(sommargaester[1:10,])
+```
+
+## Getting Wikidata about the summer guests
+
+Then I read the [list of Wikipedia R packages](https://people.wikimedia.org/~bearloga/notes/r-pkgs.html) put together by [Mikhail Popov](https://twitter.com/bearloga), data scientist at the Wikimedia foundation with whom I exchanged a few messages after my Wikipedia deaths posts. These packages were either created by him or by [Oliver Keyes](https://twitter.com/awrno) and really give you access to plenty of structured data so I was happy to give it a try at last!
+
+I used [`WikidataQueryServiceR`](https://github.com/bearloga/WikidataQueryServiceR) to access [Wikidata](https://www.wikidata.org/wiki/Wikidata:Introduction) via `SPARQL`. Luckily I didn't need to actually learn `SPARQL`, I used the first example of the documentation, getting Douglas Adams' data and played with [this online query tool](https://query.wikidata.org/) to see how I could modify it to 1) obtain data in Swedish because Swedish Wikipedia is probably more complete about Swedish people and 2) obtain data about the summer guests, not Douglas Adams. For that second point I needed the item ID of each summer guests which I queried via another R package, [`WikidataR`](https://github.com/Ironholds/WikidataR). Doing all of this I only scraped the surface of the possibilities offered by the Wikipedia-related R packages and can already tell one could do a bunch of exciting analyses with them!
