@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Who are the Swedish radio P1 summer guests?"
+title: "Who are the Swedish radio P1 summer guests? Answer via Wikidata"
 comments: true
 ---
 ```{r setup, include=FALSE}
@@ -10,17 +10,17 @@ knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE) 
 ```
 
-This week, a [very promising new R blog](https://eric.netlify.com/) was launched, namely the blog of Eric Persson a.k.a as [expersso on Twitter](https://twitter.com/expersso). I had really been looking forward to this because expersso's code screenshots have always been [quite cool](https://twitter.com/expersso/status/870661615989002240), so seeing his no longer being limited to them is awesome! His first articles series is about a game, you should really [check it out](https://eric.netlify.com/2017/08/04/implementing-nim-in-r/). (_Note: if you post screenshots of R code on Twitter, have a look at Sean Kross's [`codefinch` package](https://github.com/ropenscilabs/codefinch)!_).
+This week, a [very promising new R blog](https://eric.netlify.com/) was launched, namely the blog of Eric Persson a.k.a as [expersso on Twitter](https://twitter.com/expersso). I had really been looking forward to this because expersso's code screenshots have always been [quite cool](https://twitter.com/expersso/status/870661615989002240), so seeing his no longer being limited to them is awesome! His first articles series is about a game, you should really [check it out](https://eric.netlify.com/2017/08/04/implementing-nim-in-r/). (_PSA: if you post screenshots of R code on Twitter, have a look at Sean Kross' [`codefinch` package](https://github.com/ropenscilabs/codefinch)!_).
 
 Because I'm a nosy person I asked Eric whether he was Swedish, his last name being quite Swedish-looking in my opinion. He is, which made me wonder about Swedish blog topics and actually decided to use one Swedish topic I came up with, the [summer guests of the Swedish radio P1](http://sverigesradio.se/sida/artikel.aspx?programid=2071&artikel=4833403)! Every summer since 1959, P1 selects a bunch of famous or interesting people and have them record a bit more than one hour program where they're free to discuss what they want (important events of their life for instance) and to choose the musical breaks (which you don't get to listen entirely to in the online version because of copyright stuff). The program is then broadcasted in the summer, one guest a day from the end of June to the beginning of August. There's even a winter version now but I'll ignore it because it's too hot here in Barcelona to even think about winter.
 
-It's a very cool radio program in my opinion. I discovered it at the end of my 5-month research stay in Gothenburg in 2010 and decided it'd be a way to keep my Swedish skills up to date. I haven't listened to that many guests but I really enjoy it when I do, and I like how diverse the list of guests is. In this post, I'll actually try to have a look at the occupations of the guests via Wikipedia data!
+It's a very cool radio program in my opinion. I discovered it at the end of my 5-month research stay in Gothenburg in 2010 and decided it'd be one way to keep my Swedish skills up to date (my other methods include listening to ABBA in Swedish and reading Camilla Läckberg's novels). I haven't listened to that many guests but I really enjoy it when I do, and I like how diverse the list of guests is. In this post, I'll actually try to have a look at the occupations of the guests via Wikipedia data!
 
 <!--more-->
 
 # How to get the data?
 
-In order to answer my question I needed a list of all summer guests, and their occupations. I first thought I'd resort to webscraping P1 website, which would have been a good way to provide expersso with an opportunity to give me some [constructive](https://twitter.com/expersso/status/839395958316232704) [feedback](https://twitter.com/expersso/status/893530164482756609). However after websurfing a bit to assess my options, I soon realize I could use Wikipedia data obtained through APIs rather than [webscraping as in my posts about famous dead people](http://www.masalmon.eu/2017/02/12/wikideaths3_scraping/). Here was my strategy.
+In order to answer my question I needed a list of all summer guests, and their occupations. I first thought I'd resort to webscraping P1 website, which would have been a good way to provide expersso with an opportunity to give me some [constructive](https://twitter.com/expersso/status/839395958316232704) [feedback](https://twitter.com/expersso/status/893530164482756609). However after websurfing a bit to assess my options, I realized I could use Wikipedia data obtained through APIs rather than [webscraping as in my posts about famous dead people](http://www.masalmon.eu/2017/02/12/wikideaths3_scraping/). Here was my strategy.
 
 ## Getting the list of all summer guests from 1959
 
@@ -28,7 +28,7 @@ I downloaded the table of all summer guests from 1959 from [this page](http://sv
 
 ```{r}
 # all summer guests
-sommargaester <- readr::read_csv("p1sommar.csv", col_names = FALSE, 
+sommargaester <- readr::read_csv("data/p1sommar.csv", col_names = FALSE, 
                                  locale = readr::locale(encoding = "latin1"))
 
 # get their names
@@ -75,6 +75,63 @@ knitr::kable(sommargaester[1:10,])
 
 ## Getting Wikidata about the summer guests
 
-Then I read the [list of Wikipedia R packages](https://people.wikimedia.org/~bearloga/notes/r-pkgs.html) put together by [Mikhail Popov](https://twitter.com/bearloga), data scientist at the Wikimedia foundation with whom I exchanged a few messages after my Wikipedia deaths posts. These packages were either created by him or by [Oliver Keyes](https://twitter.com/awrno) and really give you access to plenty of structured data so I was happy to give it a try at last!
+Then I read the [list of Wikipedia R packages](https://people.wikimedia.org/~bearloga/notes/r-pkgs.html) put together by [Mikhail Popov](https://twitter.com/bearloga), data scientist at the Wikimedia foundation with whom I exchanged a few messages after my Wikipedia deaths posts. These packages were either created by him or by [Oliver Keyes](https://twitter.com/awrno) and really give you access to plenty of structured data so I was happy to at last give the list a try!
 
-I used [`WikidataQueryServiceR`](https://github.com/bearloga/WikidataQueryServiceR) to access [Wikidata](https://www.wikidata.org/wiki/Wikidata:Introduction) via `SPARQL`. Luckily I didn't need to actually learn `SPARQL`, I used the first example of the documentation, getting Douglas Adams' data and played with [this online query tool](https://query.wikidata.org/) to see how I could modify it to 1) obtain data in Swedish because Swedish Wikipedia is probably more complete about Swedish people and 2) obtain data about the summer guests, not Douglas Adams. For that second point I needed the item ID of each summer guests which I queried via another R package, [`WikidataR`](https://github.com/Ironholds/WikidataR). Doing all of this I only scraped the surface of the possibilities offered by the Wikipedia-related R packages and can already tell one could do a bunch of exciting analyses with them!
+I used [`WikidataQueryServiceR`](https://github.com/bearloga/WikidataQueryServiceR) to access [Wikidata](https://www.wikidata.org/wiki/Wikidata:Introduction) via the query language `SPARQL`. Luckily I didn't need to actually learn `SPARQL`, I used the first example of the documentation, getting Douglas Adams' data and played with [this online query tool](https://query.wikidata.org/) to see how I could modify it to 1) obtain data in Swedish because Swedish Wikipedia is probably more complete about Swedish people and 2) obtain data about the summer guests, not Douglas Adams. For that second point I needed the item ID of each summer guests which I queried via another R package, [`WikidataR`](https://github.com/Ironholds/WikidataR). I could have modified the `SPARQL` even more since I wouldn't be using picture information but I wasn't in a very perfectionist mood. 
+
+Doing all of this I only scraped the surface of the possibilities offered by the Wikipedia-related R packages and can already tell one could do a bunch of exciting analyses with them!
+
+Note that I used [Bob Rudis' code](https://rud.is/b/2017/04/23/decomposing-composers-with-r/) as an example of how to insert a progress bar which made me feel quite cool. I also inserted a pause of 1 second between calls to the APIs in order to be a good person. My function name however shows how uninspired I was for naming things.
+
+```r
+# function for getting someone's data
+get_someone_data <- function(name, pb = NULL){
+  if (!is.null(pb)) pb$tick()$print()
+  Sys.sleep(1)
+  item <- WikidataR::find_item(name, language = "sv")
+  # sometimes people have no Wikidata entry so I need this condition
+  if(length(item) > 0){
+    entity_code <- item[[1]]$id
+    query <-  paste0("PREFIX entity: <http://www.wikidata.org/entity/>
+                     #partial results
+                     
+                     SELECT ?propUrl ?propLabel ?valUrl ?valLabel ?picture
+                     WHERE
+                     {
+                     hint:Query hint:optimizer 'None' .
+                     {	BIND(entity:",entity_code," AS ?valUrl) .
+                     BIND(\"N/A\" AS ?propUrl ) .
+                     BIND(\"identity\"@sv AS ?propLabel ) .
+                     }
+                     UNION
+                     {	entity:", entity_code," ?propUrl ?valUrl .
+                     ?property ?ref ?propUrl .
+                     ?property rdf:type wikibase:Property .
+                     ?property rdfs:label ?propLabel
+                     }
+                     
+                     ?valUrl rdfs:label ?valLabel
+                     FILTER (LANG(?valLabel) = 'sv') .
+                     OPTIONAL{ ?valUrl wdt:P18 ?picture .}
+                     FILTER (lang(?propLabel) = 'sv' )
+                     }
+                     ORDER BY ?propUrl ?valUrl
+                     LIMIT 200")
+    results <- WikidataQueryServiceR::query_wikidata(query)
+    results$name<- name
+    results
+  }else{
+    NULL
+  }
+   
+  }
+
+pb <- dplyr::progress_estimated(length(sommargaester$name))
+sommargaester_wiki <- purrr::map_df(sommargaester$name,
+                                    get_someone_data, pb=pb)
+
+sommargaester <- dplyr::left_join(sommargaester, sommargaester_wiki, by = "name")
+
+readr::write_csv(sommargaester, path = "wiki_data.csv")
+```
+
