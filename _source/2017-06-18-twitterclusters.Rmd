@@ -116,12 +116,16 @@ compute_distance_pair <- function(user1, user2, followers_followers){
 compute_distance <- function(user1, user2, followers_followers){
   purrr::map2_dbl(user1, user2, compute_distance_pair, followers_followers = followers_followers)
 }
-```
+``` 
 
 After that it's time to apply the function to each possible combination of followers. I discovered the `outer` function when writing this post, it takes all combinations of the first two arguments and then applies `FUN` to each pair. It's really handy
 
 ```{r}
 followers_distances <- outer(followers$user_id, followers$user_id, FUN = "compute_distance", followers_followers = followers_followers)
+```
+
+```{r}
+save(followers_distances, file = "data/2017-06-03-twitter/distances.RData")
 ```
 
 ## Replacing user_id with names
