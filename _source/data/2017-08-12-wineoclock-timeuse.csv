@@ -1,0 +1,12 @@
+start;end;activity
+0:00;6:30;sleeping
+6:30;7:00;coffee
+7:00;8:00;running
+8:00;9:30;train
+9:30;17:00;computer
+17:00;18:00;train
+18:00;20:00;school
+20:00;20:30;pizza
+20:30;22:00;dancer
+22:00;22:30;wine_glass
+22:30;23:59;sleeping
