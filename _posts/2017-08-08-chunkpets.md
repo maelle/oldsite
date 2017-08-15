@@ -7,7 +7,7 @@ comments: true
 
 Today I made a [confession on Twitter](https://twitter.com/ma_salmon/status/894877595417948160): I told the world I had spent my whole career not naming chunks in RMarkdown documents. Even if I had said one should name them when teaching RMarkdown. But it was also a tweet for showing off since I was working on the first manuscript with named chunks and loving it. I got some interesting reactions to my tweet, including [one that made me feel better about myself](https://twitter.com/thomasp85/status/894882639303368705) (sorry Thomas), and other ones that made me feel like phrasing why one should name RMarkdown chunks.
 
-[Hadley Wickham asked](https://twitter.com/hadleywickham/status/894889893922459648) whether chunks were pets or livestock, as in [his analogy for models](https://twitter.com/mikeksmith/status/857583637465878528). Livestock chunks are identified by numbers, not names, in the case of chunks defined by position. I now think we have good reason to consider them as pets and here's why...
+[Hadley Wickham asked](https://twitter.com/hadleywickham/status/894889893922459648) whether chunks were pets or livestock, as in [this analogy for models](https://twitter.com/mikeksmith/status/857583637465878528). Livestock chunks are identified by numbers, not names, in the case of chunks defined by position. I now think we have good reason to consider them as pets and here's why...
 
 <!--more-->
 
