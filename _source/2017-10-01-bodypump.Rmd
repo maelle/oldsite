@@ -1,0 +1,207 @@
+---
+layout: post
+title: "The music of Les Mills Body Pump, with Spotify data"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+I am a runner but also a Body Pump enthusiast. Body Pump is a group fitness class of the Les Mills company, in which you train different muscle groups using a weighted bar -- whose total weight you modulate with plates in order to adapt it to your fitness level and to the muscle group. Like R, Body Pump was created in New Zealand, what a wonderful country! Every three months, a new class is released, with new songs and choreographies. What doesn't change is the muscle group trained in each of the 10 songs of each class.
+
+I've thought of analysing Body Pump data for a long time now but could never find what I was looking for, which was a dataset of number of "reps" by song, e.g. how many squats do you do in each squats song. Then I realized I could also play with other data, like a quite comprehensive list of songs used in releases. I decided to cross this information with information about style and popularity of the corresponding artist in Spotify.
+
+<!--more-->
+
+# Track 1: Track list cleaning
+
+This I did listening to pop music, actually using my husband's Deezer account. I downloaded data from [this page](http://www.blogforumsupport.com/2008/bodypump2008.html) which is quite exhaustive for many releases but well not formatted in a consistent way over releases, so I needed to be patient. A bit like when in the triceps track one does many half repetitions and feels one's arms are going to fall off. 
+
+```{r}
+library("rvest")
+pg <- "http://www.blogforumsupport.com/2008/bodypump2008.html"
+pg_content <- read_html(pg, encoding = "latin1")
+save(pg_content, file = "data/pg_content.RData")
+```
+Then I extracted the track lists, in a non very elegant way. Sometimes one just wants the job done...
+
+```{r}
+xtract_nodes <- function(node, css) {
+  html_nodes(node, css) %>% html_text(trim = TRUE)
+}
+tracks <- xtract_nodes(pg_content, 'p')
+tracks <- tracks[grepl("1", tracks) & grepl("2", tracks) & grepl("9", tracks) & grepl("10", tracks)]
+tracks <- unlist(tracks)
+```
+
+What follows is scripted manual correction of some mistakes in the data, or things that makes later extraction of title vs. artist a bit complicated.
+
+```{r}
+tracks <- stringr::str_replace(tracks, 
+                               "04. Campione 2012 - DJ Flow05. 50 Ways to Say Goodbye - Train",
+                               "04. Campione 2012 - DJ Flow \n 05. 50 Ways to Say Goodbye - Train")
+tracks <- stringr::str_replace(tracks, 
+                               "Upion Havoc09. She's so Mean",
+                               "Upion Havoc \n 09. She's so Mean")
+
+tracks <- stringr::str_replace(tracks, "07. How Deep Is Your Love -", "07. How Deep Is Your Love - Calvin Harris")
+tracks <- stringr::str_replace(tracks, "08 Bumble Bee -", "08 Bumble Bee - Zedd & Botnek")
+tracks <- stringr::str_replace(tracks, "Young & Stupid -", "Young & Stupid - Travis Mills feat. T.I.")
+tracks <- stringr::str_replace(tracks, "Bpn Jovi", " - Bon Jovi")
+tracks <- stringr::str_replace(tracks, "Damn-R", "Damn R")
+tracks <- stringr::str_replace(tracks, "Re-Dub", "Re Dub")
+tracks <- stringr::str_replace(tracks, "Boom-Lay Boom-Lay Boom", "Boom Lay Boom Lay Boom")
+tracks <- stringr::str_replace(tracks, "Hi-Tack", "Hi Tack")
+tracks <- stringr::str_replace(tracks, "\\(Calvin Harris Remix\\) Fatboy Slim", "Fatboy Slim")
+tracks <- stringr::str_replace(tracks, "B-Tastic", "B Tastic")
+tracks <- stringr::str_replace(tracks, "E-Nergy", "E Nergy")
+tracks <- stringr::str_replace(tracks, "In the Clear Six60", "In the Clear - Six60")
+tracks <- stringr::str_replace(tracks, "Everybody Go! Vice", "Everybody Go! - Vice")
+tracks <- stringr::str_replace(tracks, "My Love - feat. T.I. - Justin Timberlake",
+                               "My Love - Justin Timberlake feat. T.I.")
+ 
+tracks <- stringr::str_replace(tracks, "Original Release \\(PPCA\\)", "")
+tracks <- tracks[!stringr::str_detect(tracks, "Get ready for what may be our fiercest release yet")]
+
+
+```
+
+After doing this I lied on the floor drenched in sweat / created a `tibble`.
+
+```{r}
+tracks <- tibble::tibble(track = tracks)
+tracks$release <- nrow(tracks):1
+```
+
+Note that the release variable isn't the actual release number, it's more a time variable.
+
+At this stage I had one string by release, which I split in one string by track.
+
+```{r}
+tracks$track <- purrr::map(tracks$track, stringr::str_split,
+                     pattern = "\\\n", simplify = FALSE)
+tracks$track <- purrr::map(tracks$track, unlist)
+tracks <- tidyr::unnest(tracks, track)
+```
+
+The next step was keeping only the 10 first tracks by release, ignoring bonus and alternative tracks listed at the end. It also involved removing useless strings that were not actually songs.
+
+```{r}
+tracks <- dplyr::filter(tracks, track != "")
+tracks <- dplyr::filter(tracks, track != "              02. ")
+tracks <- dplyr::filter(tracks, track != "              03. ")
+tracks <- dplyr::filter(tracks, track != "              04. ")
+tracks <- dplyr::filter(tracks, track != "              05. ")
+tracks <- dplyr::filter(tracks, track != "              06. ")
+tracks <- dplyr::filter(tracks, track != "              07. ")
+tracks <- dplyr::filter(tracks, track != "              08. ")
+tracks <- dplyr::filter(tracks, track != "            08. ")
+tracks <- dplyr::filter(tracks, track != "              09. ")
+tracks <- dplyr::filter(tracks, track != "            09. ")
+tracks <- dplyr::filter(tracks, track != "              10. ")
+tracks <- dplyr::filter(tracks, track != "            10. ")
+tracks <- dplyr::filter(tracks, track != "          Calvin Harris")
+tracks <- dplyr::filter(tracks, track != "          Zedd & Botnek")
+tracks <- dplyr::filter(tracks, track != "          Travis Mills feat. T.I.")
+tracks <- dplyr::group_by(tracks, release)
+tracks <- dplyr::mutate(tracks, song = 1:n())
+tracks <- dplyr::filter(tracks, song <= 10)
+tracks <- dplyr::ungroup(tracks)
+knitr::kable(tracks[1:10,])
+```
+
+After this I extracted the title and artist of each track. I'm not sure why I needed to change the encoding of the string for that, but before trying this solution I was bothered by there being different sorts of dashes and hyphens.
+
+```{r}
+tracks <- dplyr::mutate(tracks, track = stringr::str_trim(track))
+
+split_title_artist <- function(string, release){
+  track <- string
+  Encoding(string) <- "latin1"
+  # avoid some issues later
+  string <- stringr::str_replace(string, "â\u0080\u0099", "'")
+  string <- stringr::str_replace(string, "ï¼\u0088", "(")
+  string <- stringr::str_replace(string, "¼\u0089", ")")
+  string <- stringr::str_replace(string, "`", "'")
+  string <- stringr::str_replace(string, "â\u0080¦", "...")
+  string <- stringr::str_replace(string, "DÃ©jÃ", "Déjà")
+  string <- stringr::str_replace(string, "Bbn Jovi", "- Bon Jovi")
+  string <- stringr::str_replace(string, "Marfia", "Mafia")
+  string <- stringr::str_replace(string, ":", "")
+  string <- stringr::str_replace(string, "Diamond Eyes (Boom-Lay Boom-Lay Boom)", "Diamond Eyes (Boom Lay Boom Lay Boom)")
+  string <- stringr::str_replace(string, "Studio-X", "Studio X")
+  
+  # hyphens/dashes
+  string <- stringr::str_replace(string, "â\u0080\u0093", "-")
+  string <- stringr::str_replace(string, "–", "-")
+  string <- stringr::str_replace(string, "-", "\u0096")
+  both <- stringr::str_split(string, pattern = "\u0096",
+                             simplify = TRUE)
+  tibble::tibble(title = both[1],
+                artist = both[2], 
+                release = release,
+                track = track)
+}
+
+split_a_release <- function(strings, release){
+  purrr::map_df(strings, split_title_artist, release)
+}
+
+tracks_si <- purrr::map2_df(tracks$track, tracks$release, split_a_release)
+tracks <- dplyr::left_join(tracks, tracks_si, by = c("release", "track"))
+tracks <- dplyr::mutate(tracks, title = stringr::str_replace(title, "^[0-1]*[0-9]* *\\.*", ""))
+```
+
+When the artist was in fact two artists, I kept only the first one which I assumed to be more informative of the style of the song.
+
+```{r}
+first_artist <- function(artist){
+  artist <- stringr::str_replace(artist, "\\&.*$", "")
+  first_artist <- stringr::str_replace(artist, "[fF]eat.*", "")
+  if(stringr::str_detect(first_artist, "Colourbox")){
+    first_artist <- "Colourbox"
+  }
+  first_artist
+}
+
+tracks <- dplyr::mutate(tracks, first_artist = first_artist(tracks$artist))
+
+```
+
+And I got there:
+
+```{r}
+knitr::kable(tracks[1:10,])
+```
+
+# Track 2: Spotify data downloading
+
+I dreamt of a database giving me the beats per minute, style, etc of each song. I didn't get any information about the bpm but thanks to the Spotify API and [this R package](https://github.com/tiagomendesdantas/Rspotify) I was able to get information about the artists including their genre and popularity. 
+
+Note: the `spotifyOAuth` part of the following lines demands your first getting an Spotify API app client ID and secret as explained in the README of the package. I saved these as environment variables in my .Renviron.
+
+```r
+library("Rspotify")
+keys <- spotifyOAuth(app_id = Sys.getenv("SPOTIFY_APPID"),
+                     client_id = Sys.getenv("SPOTIFY_CLIENTID"),
+                     client_secret = Sys.getenv("SPOTIFY_SECRET"))
+get_and_wait <- function(artist, keys){
+  Sys.sleep(1)
+  info <- searchArtist(artist, token = keys)
+  if(!is.null(info)){
+    info <- info[1,]
+  }
+  info$first_artist <- artist
+  info
+}
+
+artists_info <- purrr::map_df(unique(tracks$first_artist), get_and_wait, keys)
+readr::write_csv(artists_info, path = "data/artists_info.csv")
+
+tracks <- dplyr::left_join(tracks, artists_info, by = "first_artist")
+readr::write_csv(tracks, path = "data/tracks.csv")
+
+```
