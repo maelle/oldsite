@@ -1,0 +1,83 @@
+---
+layout: post
+title: "The Guardian experience: heavy or light topics?"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+I've recently been binge-reading The Guardian Experience columns. I'm a big fan of The Guardian life and style section regulars: the [blind dates](https://www.theguardian.com/lifeandstyle/series/blind-date) to which I dedicated [a blog post](http://www.masalmon.eu/2017/03/07/blinddates/), Oliver Burkeman's [This column will change your life](https://www.theguardian.com/lifeandstyle/series/thiscolumnwillchangeyourlife), etc. [Experience](https://www.theguardian.com/lifeandstyle/series/experience) is another regular that I enjoy a lot. In each of the column, someone tells something remarkable that happened to them. It can really be anything. 
+
+I was thinking of maybe scraping the titles and get a sense of most common topics. The final push was my husband's telling me about [this article](https://www.thecut.com/2017/09/10-best-guardian-experience-columns.html) of 
+Gabriella Paiella's about the best Guardian Experience columns. I was a bit surprised when she wrote "the “Experience” column does often touch on heavier topics" because I was honestly not so sure. I've read two columns where people killed their best friends (in alcohol-related accidents) for instance. But well I couldn't know what was the most prevalent "weight" of Experience columns unless I scraped all their titles...
+
+<!--more-->
+
+# Experience: I downloaded all the titles of The Guardian Experience columns
+
+I learnt a lot about responsible (and elegant) webscraping from Bob Rudis, and decided to use the tool he mentioned [in this blog post](https://rud.is/b/2017/09/19/pirating-web-content-responsibly-with-r/), the [`robotstxt` package](https://github.com/ropenscilabs/robotstxt) which "makes it easy to check if bots (spiders, crawler, scrapers, ...) are allowed to access specific resources on a domain."
+
+```{r}
+robotstxt::get_robotstxt("https://www.theguardian.com")
+robotstxt::paths_allowed("https://www.theguardian.com/lifeandstyle/series/experience")
+```
+
+If I understand the above correctly, I'm allowed to scrape the titles of the columns, great!
+
+I also noticed the crawl delay at the end of the robots.txt, of 1 second. Since I've decided to be a really nice scraper and also because I only have 29 pages to scrape in total, I'll use a delay of 2 seconds between requests. In his post Bob says that if there is no indication, you should wait 5 seconds.
+
+After these checks, I started working on the scraping itself.
+
+```{r}
+library("rvest")
+
+xtract_titles <- function(node) {
+  css <- 'span[class="js-headline-text"]'
+  html_nodes(node, css) %>% html_text(trim = TRUE)
+}
+
+
+get_titles_from_page <- function(page_number){
+  Sys.sleep(2)
+  link <- paste0("https://www.theguardian.com/lifeandstyle/series/experience?page=", page_number)
+  page_content <- read_html(link)
+  xtract_titles(page_content)
+}
+
+experience_titles <- purrr::map(1:29, get_titles_from_page) %>% unlist()
+save(experience_titles, file = "data/2017-10-02-guardian-experience.RData")
+
+```
+
+```{r}
+set.seed(1)
+sample(experience_titles, 10)
+```
+
+See, these are really diverse topics! And I think this sample of 10 titles actually shows many heavy topics.
+
+# Experience: I computed the most frequent words in The Guardian Experience columns
+
+I'll first remove the "Experience: " part of many titles, since it's not exactly the most interesting word.
+
+```{r}
+titles <- stringr::str_replace(titles, "^Experience: ", "")
+
+```
+
+I then unnested words. Interestingly in order to remember how to do this I went and read [my Guardian blind dates post](http://www.masalmon.eu/2017/03/07/blinddates/) (the "So what did they talk about?" part).
+
+```{r}
+library("tidytext")
+library("rcorpora")
+stopwords <- corpora("words/stopwords/en")$stopWords
+words <- tibble::tibble(title = experience_titles) %>%
+  unnest_tokens(word, title) %>%
+  dplyr::filter(!word %in% stopwords) %>%
+  dplyr::count(word, sort = TRUE) 
+
+```
