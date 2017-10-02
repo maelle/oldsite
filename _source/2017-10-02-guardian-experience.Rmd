@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "The Guardian experience: heavy or light topics?"
+title: "The Guardian Experience: heavy or light topics?"
 comments: true
 ---
 ```{r setup, include=FALSE}
