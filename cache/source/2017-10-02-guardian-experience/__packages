@@ -1,0 +1,10 @@
+base
+xml2
+rvest
+rcorpora
+SparseM
+RTextTools
+tidytext
+bindrcpp
+ggplot2
+hrbrthemes

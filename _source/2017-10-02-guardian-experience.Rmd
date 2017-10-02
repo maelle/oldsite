@@ -60,12 +60,12 @@ sample(experience_titles, 10)
 
 See, these are really diverse topics! And I think this sample of 10 titles actually shows many heavy topics.
 
-# Experience: I computed the most frequent words in The Guardian Experience columns
+# Experience: I computed the most frequent words 
 
 I'll first remove the "Experience: " part of many titles, since it's not exactly the most interesting word.
 
 ```{r}
-titles <- stringr::str_replace(titles, "^Experience: ", "")
+experience_titles <- stringr::str_replace(experience_titles, "^Experience: ", "")
 
 ```
 
@@ -74,10 +74,95 @@ I then unnested words. Interestingly in order to remember how to do this I went 
 ```{r}
 library("tidytext")
 library("rcorpora")
+
 stopwords <- corpora("words/stopwords/en")$stopWords
+
 words <- tibble::tibble(title = experience_titles) %>%
   unnest_tokens(word, title) %>%
   dplyr::filter(!word %in% stopwords) %>%
   dplyr::count(word, sort = TRUE) 
+```
+
+```{r}
+knitr::kable(words[1:20,])
+```
+
+In my opinion this list of the most common words support my feeling topics are often heavy, but I also think it might be because there are many, many different words that can describe a light topic while well death will be primarily described by "killed". Could sentiment analysis of the titles help me?
+
+# Experience: I computed the sentiment of titles
+
+```{r}
+afinn <- get_sentiments("afinn")
+
+sentiment <- tibble::tibble(title = experience_titles) %>%
+  dplyr::mutate(saved_title = title) %>%
+  unnest_tokens(word, title) %>%
+  dplyr::inner_join(afinn) %>%
+  dplyr::group_by(saved_title) %>%
+  dplyr::summarize(sentiment = sum(score)) %>%
+  dplyr::filter(!is.na(sentiment))
 
 ```
+
+```{r}
+knitr::kable(sentiment[1:10,])
+
+```
+
+
+```{r}
+library("ggplot2")
+library("hrbrthemes")
+
+ggplot(sentiment) +
+  geom_bar(aes(sentiment)) +
+  theme_ipsum_rc()
+
+```
+
+Honestly, I think sentiment analysis didn't help much here: the titles are too short, and the sample presented above is not very convincing. Moreoever, would the sentiment reveal the dramatic intensity of light vs. heavy, anyway? 
+
+# Experience: I tried using machine learning to derive a topic from the title
+
+In the following I'll use [my own `monkeylearn` package](https://github.com/ropensci/monkeylearn) and in particular [this topic classifier](https://app.monkeylearn.com/main/classifiers/cl_5icAVzKR/) without too much hope since I'm feeding it a title, not a whole article.
+
+```{r}
+topics <- monkeylearn::monkeylearn_classify(experience_titles,
+                                            classifier_id = "cl_5icAVzKR")
+
+titles <- tibble::tibble(title = experience_titles,
+                         text_md5 = purrr::map_chr(experience_titles, digest::digest, algo = "md5"))
+
+titles <- dplyr::inner_join(titles, topics, by = "text_md5")
+
+```
+
+Here's a sample of the results after an arbitrary filtering based on probability:
+
+```{r}
+titles <- dplyr::filter(titles, probability > 0.5)
+set.seed(1)
+dplyr::sample_n(titles, size = 20) %>% 
+  dplyr::select(title, label, probability) %>%
+  knitr::kable()
+```
+
+Note that after this filtering I had at least one topic for `r length(unique(titles$title))` titles. I don't think this classification is really useful either but at least it's fun to look at the proposed topic. What are the most frequent ones?
+
+
+```{r}
+titles %>%
+  dplyr::group_by(label) %>%
+  dplyr::summarise(n = n(),
+                   some = toString(title[1:3])) %>%
+  dplyr::arrange(dplyr::desc(n)) %>%
+  head(n = 10) %>%
+  knitr::kable()
+
+```
+
+That, in a way, makes me more okay with the classification. I've always had the impression (you have to believe me) that many of the columns dealt with accidents, which corresponds to the transportation category, and families and relationships, and well animals, the ones [that try to eat you](https://www.theguardian.com/lifeandstyle/2010/oct/16/experience-shark-attack-paralympian) or [that steal your tractor](https://www.theguardian.com/lifeandstyle/2015/jun/12/experience-my-dog-stole-my-tractor). But now does it help me judge whether the Experience columns deal with rather light or heavy topics? Hum, no.
+
+# Experience: I could not really answer my initial question
+
+So, it was fun, but I can't really tell Gabriella Paiella whether she was right or wrong. One thing is sure, these columns are quite varied... so everyone can find what they're looking for, either a dramatic story or a funny one?
