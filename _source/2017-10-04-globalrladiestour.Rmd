@@ -69,7 +69,7 @@ geolocate_chapter <- function(chapter){
                  formatted = results$formatted)
 }
 
-chapters_df <- purrr::map_df(chapters, geolocate_chapter)
+chapters_df <- purrr::map_df(chapters[1:10], geolocate_chapter)
 
 # add an index variable
 chapters_df <- dplyr::mutate(chapters_df, id = 1:nrow(chapters_df))
@@ -135,8 +135,8 @@ result <- solve_model(model, with_ROI(solver = "symphony", verbose = TRUE))
 ```
 
 
-```{r, echo = FALSE}
-save(result, file = "data/globalrladiestour.RData")
+```{r, echo = FALSE, eval = TRUE}
+#save(result, file = "data/globalrladiestour.RData")
 ```
 
 After that we can get a tidyverse-compatible `data.frame`, what a nice package!
@@ -152,8 +152,18 @@ And here is how to link the solution to our initial chapters `data.frame`
 
 
 ```{r}
-paths <- dplyr::select(solution, i, j) %>% 
-  dplyr::rename(from = i, to = j) %>% 
+paths_mess <- dplyr::select(solution, i, j) %>% 
+  dplyr::rename(from = i, to = j) 
+
+# couldn't find more elegant solution
+# to have the right order
+paths <- paths_mess[1,]
+for (row in 2:nrow(paths_mess)){
+  paths <- rbind(paths,
+                 paths_mess[paths_mess$from == paths$to[row - 1],])
+}
+
+paths <- paths %>%
   dplyr::mutate(trip_id = row_number()) %>% 
   tidyr::gather(property, idx_val, from:to) %>% 
   dplyr::mutate(idx_val = as.integer(idx_val)) %>% 
@@ -188,6 +198,92 @@ ggplot(data = paths, aes(long, lat)) +
 
 ```
 
+Dirk told me the map would look better with great circles instead of straight lines so I googled a bit around, asked for help [on Twitter](https://twitter.com/ma_salmon/status/915515028702466048) before finding [this post](http://strimas.com/spatial/long-flights/).
+
+```{r}
+library("geosphere")
+gc_routes <- gcIntermediate(paths[seq(from = 1, to = nrow(paths) - 1,
+                                      by = 2), c("long", "lat")],
+                            paths[seq(from = 2, to = nrow(paths),
+                                      by = 2), c("long", "lat")],
+                            n = 360, addStartEnd = TRUE, sp = TRUE, 
+                            breakAtDateLine = TRUE)
+gc_routes <- SpatialLinesDataFrame(gc_routes, 
+                                   data.frame(id = paths$id,
+                                              stringsAsFactors = FALSE))
+
+```
+
+
+```{r}
+gc_routes_df <- fortify(gc_routes)
+gc_routes_df <- dplyr::arrange(gc_routes_df,
+                               as.numeric(id), order)
+# first and last points are duplicates
+gc_routes_df <- dplyr::filter(gc_routes_df,
+                              order != 1)
+ggplot(data = paths, aes(long, lat)) + 
+  geom_map(data = world, map = world, aes(long, lat, map_id = region), 
+           fill = "white", color = "darkgrey", alpha = 0.8, size = 0.2) + 
+  geom_path(data = gc_routes_df, 
+            aes(long, lat, group = group), alpha = 0.5, color = "#88398A") + 
+  geom_point(data = chapters_df, color = "#88398A", size = 0.8) + 
+  theme_map() + 
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  ggtitle("R-Ladies global tour", 
+          subtitle = paste0(format(round(result$objective_value/ 1000), big.mark = ","), " km"))
+
+```
+
+Ok this is much, much nicer, it was worth the search.
+
 # Plotting the tour, magical version
 
-And now I'll use `magick` and `tweenr`!
+And now I'll use `magick` because I want to add a small bee flying around the world. Why a bee? Well because it was a nice looking flying emoji. By the way if this global tour were to happen I reckon that one would need to donate a lot of money to rainforest charities or the like, because it'd have a huge carbon footprint! Too bad really, I don't want my gif to promote planet destroying behaviours.
+
+To make the gif I used code similar to the one [shared in this post](http://www.masalmon.eu/2017/02/18/complot/).
+
+```{r}
+library("emojifont")
+load.emojifont('OpenSansEmoji.ttf')
+library("magick")
+gc_routes_df <- dplyr::mutate(gc_routes_df, 
+                              moment = 1:nrow(gc_routes_df))
+plot_one_moment <- function(moment, word,
+                            chapters_df, 
+                            gc_routes_df){
+  p <- ggplot(data = paths, aes(long, lat)) + 
+  geom_map(data = world, map = world, aes(long, lat, map_id = region), 
+           fill = "white", color = "darkgrey", alpha = 0.8, size = 0.2) + 
+  geom_path(data = gc_routes_df, 
+            aes(long, lat, group = group), alpha = 0.5, color = "#88398A") + 
+  geom_point(data = chapters_df, color = "#88398A", size = 0.8) + 
+  theme_map(base_size = 18) + 
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  ggtitle("R-Ladies global tour", 
+          subtitle = paste0(format(round(result$objective_value/ 1000), big.mark = ","), " km"))+ 
+    geom_text(data = gc_routes_df[gc_routes_df$moment == moment,], 
+            aes(x = long, 
+                y = lat,
+                label = emoji("bee")),
+            family="OpenSansEmoji",
+                size = 10)
+  outfil <- paste0("figs/airplane_", moment, ".png")
+  ggsave(outfil, p, width=5, height=3)
+
+  outfil
+}
+
+purrr::map(seq(from = 1, to = nrow(gc_routes_df), by = 100),
+     plot_one_moment, word = word,
+      chapters_df = chapters_df, 
+      gc_routes_df = gc_routes_df) %>%
+  map(image_read) %>%
+  image_join() %>%
+  image_animate(fps=0.025) %>%
+  image_write("rladiesglobal.gif")
+```
+
+![](https://github.com/masalmon/masalmon.github.io/blob/master/_source/rladiesglobal.gif?raw=true)
+
+The above gif could be even cooler if I used more frames, this way the trip of the bee would look smoother.
