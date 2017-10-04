@@ -1,0 +1,193 @@
+---
+layout: post
+title: "The R-Ladies global tour"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+It was recently brought to my attention by [Hannah Frick](https://twitter.com/hfcfrick) that there are now sooo many R-Ladies chapters around the world! [R-Ladies](http://rladies.org/) is a world-wide organization to promote gender diversity in the R community, and I'm very grateful to be part of this community through which I met so many awesome ladies! Since we're all connected, it has now happened quite a few times that R-Ladies gave talks at chapters outside of their hometowns. An R-Lady from Taiwan giving a talk in Madrid while on a trip in Europe and another one doing the same in Lisbon, an R-Lady from San Francisco presenting at the London and Barcelona chapters thanks to a conference on the continent, an R-Lady from Uruguay sharing her experience for the New York City and San Francisco chapters... It's like rockstars tours! 
+
+Therefore we  R-Ladies often joke about doing an exhaustive global tour. Hannah made me think about this tour again... If someone were to really visit all of the chapters, what would be the shortest itinerary? And could we do a cool gif with the results? These are the problems we solve here.
+
+<!--more-->
+
+# Getting the chapters
+
+To find all chapters, I'll scrape [this webpage](https://www.meetup.com/topics/r-ladies/all/) because I'm too impatient to wait for the cool [`meetupr` package](https://github.com/rladies/meetupr/) to include the Meetup API topic endpoint and because I'm too lazy to include it myself. I did open [an issue](https://github.com/rladies/meetupr/issues/13) though. Besides, I was allowed to scrape the page:
+
+```{r}
+robotstxt::paths_allowed("https://www.meetup.com/topics/")
+```
+
+Yesss. So let's scrape!
+
+```{r}
+library("rvest")
+
+link <- "https://www.meetup.com/topics/r-ladies/all/"
+page_content <- read_html(link)
+css <- 'span[class="text--secondary text--small chunk"]'
+
+chapters <-  html_nodes(page_content, css) %>% html_text(trim = TRUE)
+chapters <- stringr::str_replace(chapters, ".*\\|", "")
+chapters <- trimws(chapters)
+head(chapters)
+
+# Montenegro
+chapters[chapters == "HN\\, Montenegro"] <- "Herceg Novi, Montenegro"
+```
+
+# Geolocating the chapters
+
+Here I decided to use a [nifty package](https://github.com/ropensci/opencage) to the awesome OpenCage API. Ok, this is my own package. But hey it's really a good geocoding API. And the package was [reviewed for rOpenSci by Julia Silge](https://github.com/ropensci/onboarding/issues/36)!
+
+Given that there are many chapters but not that many (`r length(chapters)` to be exact), I could inspect the results and check them.
+
+```{r}
+geolocate_chapter <- function(chapter){
+  # query the API
+  results <- opencage::opencage_forward(chapter)$results
+  # deal with Strasbourg
+  if(chapter == "Strasbourg, France"){
+    results <- dplyr::filter(results, components.city == "Strasbourg")
+  }
+  # get a CITY
+  results <- dplyr::filter(results, components._type == "city")
+  # sort the results by confidence score 
+  results <- dplyr::arrange(results, desc(confidence))
+  # choose the first line among those with highest confidence score
+  results <- results[1,]
+  # return only long and lat
+  tibble::tibble(long = results$geometry.lng,
+                 lat = results$geometry.lat,
+                 chapter = chapter, 
+                 formatted = results$formatted)
+}
+
+chapters_df <- purrr::map_df(chapters[1:10], geolocate_chapter)
+
+# add an index variable
+chapters_df <- dplyr::mutate(chapters_df, id = 1:nrow(chapters_df))
+
+knitr::kable(chapters_df[1:10,])
+```
+
+
+# Planning the trip
+
+I'll use the [`ompr` package](https://github.com/dirkschumacher/ompr) inspired by this fantastic use case, ["Boris Johnson’s fully global itinerary of apology"](https://rstudio-pubs-static.s3.amazonaws.com/199542_7f23d4edf6094d89b386e9c875d09a1c.html). The `ompr` package supports modeling and solving [Mixed Integer Linear Programs](https://en.wikipedia.org/wiki/Integer_programming). I got a not so bad notion of what this means by looking [at this collection of use cases](https://dirkschumacher.github.io/ompr/articles/index.html). I'll just follow the same steps as [in the traveling salesman vignette](https://dirkschumacher.github.io/ompr/articles/problem-tsp.html), thanks Dirk!
+
+We first need to compute the distance between chapters.
+
+```{r}
+distance <- geosphere::distm(as.matrix(dplyr::select(chapters_df, long, lat))) %>% 
+  round
+
+```
+
+Then the cool part comes, building the model! Dirk has made `ompr` particularly user-friendly. Obviously in my case I just need to copy paste stuff but if I were to create a model from scratch using `ompr` I wouldn't need to write mathematical formulas myself.
+
+```{r}
+library("ompr")
+
+n <- nrow(chapters_df)
+# Model based on the answer by Alan Erera at http://www.or-exchange.com/questions/11784/solving-tsp-using-solvers/11943
+model <- MIPModel() %>%
+  
+  # we create a variable that is 1 iff we travel from city i to j
+  add_variable(x[i, j], i = 1:n, j = 1:n, 
+               type = "integer", lb = 0, ub = 1) %>%
+  
+  # a helper variable for the MTZ formulation of the tsp
+  add_variable(u[i], i = 1:n, lb = 1, ub = n) %>% 
+  
+  # minimize travel distance
+  set_objective(sum_expr(distance[i, j] * x[i, j], i = 1:n, j = 1:n), "min") %>%
+  
+  # you cannot go to the same city
+  set_bounds(x[i, i], ub = 0, i = 1:n) %>%
+  
+  # leave each city
+  add_constraint(sum_expr(x[i, j], j = 1:n) == 1, i = 1:n) %>%
+  
+  # visit each city
+  add_constraint(sum_expr(x[i, j], i = 1:n) == 1, j = 1:n) %>%
+  
+  # ensure no subtours (arc constraints)
+  add_constraint(u[i] >= 2, i = 2:n) %>% 
+  add_constraint(u[i] - u[j] + 1 <= (n - 1) * (1 - x[i, j]), i = 2:n, j = 2:n)
+model
+
+```
+
+Wait did I say building the model is cool? Solving it even more so! `ompr` works with several solvers, Symphony being one of them. Dirk told me it would be faster than GLPK. We used to work together so he knows how patient I am (hint: not at all).
+
+```{r, eval = TRUE}
+library("ompr.roi")
+library("ROI.plugin.symphony")
+result <- solve_model(model, with_ROI(solver = "symphony", verbose = TRUE))
+
+```
+
+
+```{r, echo = FALSE}
+save(result, file = "data/globalrladiestour.RData")
+```
+
+After that we can get a tidyverse-compatible `data.frame`, what a nice package!
+
+```{r}
+solution <- get_solution(result, x[i, j]) %>% 
+  dplyr::filter(value > 0) 
+knitr::kable(solution[1:2,])
+
+```
+
+And here is how to link the solution to our initial chapters `data.frame`
+
+
+```{r}
+paths <- dplyr::select(solution, i, j) %>% 
+  dplyr::rename(from = i, to = j) %>% 
+  dplyr::mutate(trip_id = row_number()) %>% 
+  tidyr::gather(property, idx_val, from:to) %>% 
+  dplyr::mutate(idx_val = as.integer(idx_val)) %>% 
+  dplyr::inner_join(chapters_df, by = c("idx_val" = "id"))
+paths <- dplyr::arrange(paths, trip_id)
+knitr::kable(paths[1:3,])
+```
+
+
+# Plotting the tour, boring version
+
+I'll start by plotting the trips as it is done in the vignette, i.e. in a static way.
+
+
+```{r}
+library("ggplot2")
+library("ggalt")
+library("ggthemes")
+library("ggmap")
+world <- map_data("world") %>% dplyr::filter(region != "Antarctica")
+
+
+ggplot(data = paths, aes(long, lat)) + 
+  geom_map(data = world, map = world, aes(long, lat, map_id = region), 
+           fill = "white", color = "darkgrey", alpha = 0.8, size = 0.2) + 
+  geom_path(aes(group = trip_id), color = "#88398A") + 
+  geom_point(data = chapters_df, color = "#88398A", size = 0.8) + 
+  theme_map() + 
+  #coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  ggtitle("R-Ladies global tour", 
+          subtitle = paste0(format(round(result$objective_value/ 1000), big.mark = ","), " km"))
+
+```
+
+# Plotting the tour, magical version
+
+And now I'll use `magick` and `tweenr`!
