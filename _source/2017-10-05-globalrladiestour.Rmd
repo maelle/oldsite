@@ -80,7 +80,7 @@ knitr::kable(chapters_df[1:10,])
 
 # Planning the trip
 
-I'll use the [`ompr` package](https://github.com/dirkschumacher/ompr) inspired by this fantastic use case, ["Boris Johnson’s fully global itinerary of apology"](https://rstudio-pubs-static.s3.amazonaws.com/199542_7f23d4edf6094d89b386e9c875d09a1c.html). The `ompr` package supports modeling and solving [Mixed Integer Linear Programs](https://en.wikipedia.org/wiki/Integer_programming). I got a not so bad notion of what this means by looking [at this collection of use cases](https://dirkschumacher.github.io/ompr/articles/index.html). I'll just follow the same steps as [in the traveling salesman vignette](https://dirkschumacher.github.io/ompr/articles/problem-tsp.html), thanks Dirk!
+I'll use the [`ompr` package](https://github.com/dirkschumacher/ompr) inspired by this fantastic use case, ["Boris Johnson’s fully global itinerary of apology"](https://rstudio-pubs-static.s3.amazonaws.com/199542_7f23d4edf6094d89b386e9c875d09a1c.html) -- be careful, the code of this use case is slightly outdated. The `ompr` package supports modeling and solving [Mixed Integer Linear Programs](https://en.wikipedia.org/wiki/Integer_programming). I got a not so bad notion of what this means by looking [at this collection of use cases](https://dirkschumacher.github.io/ompr/articles/index.html). I'll just follow the same steps as [in the traveling salesman vignette](https://dirkschumacher.github.io/ompr/articles/problem-tsp.html), thanks Dirk!
 
 We first need to compute the distance between chapters.
 
@@ -136,7 +136,7 @@ result <- solve_model(model, with_ROI(solver = "symphony", verbose = TRUE))
 
 
 ```{r, echo = FALSE, eval = TRUE}
-#save(result, file = "data/globalrladiestour.RData")
+save(result, file = "data/globalrladiestour.RData")
 ```
 
 After that we can get a tidyverse-compatible `data.frame`, what a nice package!
@@ -148,8 +148,7 @@ knitr::kable(solution[1:2,])
 
 ```
 
-And here is how to link the solution to our initial chapters `data.frame`
-
+And here is how to link the solution to our initial chapters `data.frame`.
 
 ```{r}
 paths_mess <- dplyr::select(solution, i, j) %>% 
@@ -185,7 +184,6 @@ library("ggthemes")
 library("ggmap")
 world <- map_data("world") %>% dplyr::filter(region != "Antarctica")
 
-
 ggplot(data = paths, aes(long, lat)) + 
   geom_map(data = world, map = world, aes(long, lat, map_id = region), 
            fill = "white", color = "darkgrey", alpha = 0.8, size = 0.2) + 
@@ -202,9 +200,11 @@ Dirk told me the map would look better with great circles instead of straight li
 
 ```{r}
 library("geosphere")
+# keeping the distance for later
 paths <- dplyr::mutate(paths,
                        distance = geosphere::distGeo(cbind(lag(long), lag(lat)),
                                                      cbind(long, lat)))
+# find points on great circles between chapters
 gc_routes <- gcIntermediate(paths[seq(from = 1, to = nrow(paths) - 1,
                                       by = 2), c("long", "lat")],
                             paths[seq(from = 2, to = nrow(paths),
@@ -215,6 +215,8 @@ gc_routes <- SpatialLinesDataFrame(gc_routes,
                                    data.frame(id = paths$id,
                                               stringsAsFactors = FALSE))
 gc_routes_df <- fortify(gc_routes)
+# join the resulting data.frame with paths
+# in order to have a distance and the destination of the trip
 gc_routes_df <- dplyr::mutate(gc_routes_df, id = as.numeric(id))
 dist_paths <- dplyr::filter(paths, distance != 0)
 dist_paths <- dplyr::select(dist_paths, chapter, distance, trip_id)
@@ -249,7 +251,7 @@ Ok this is much, much nicer, it was worth the search.
 
 And now I'll use `magick` because I want to add a small bee flying around the world. Why a bee? Well because it was a nice looking flying emoji. By the way if this global tour were to happen I reckon that one would need to donate a lot of money to rainforest charities or the like, because it'd have a huge carbon footprint! Too bad really, I don't want my gif to promote planet destroying behaviours.
 
-To make the gif I used code similar to the one [shared in this post](http://www.masalmon.eu/2017/02/18/complot/).
+To make the gif I used code similar to the one [shared in this post](http://www.masalmon.eu/2017/02/18/complot/) but in a better version thanks to Jeroen who told me to [read the vignette again](https://cran.r-project.org/web/packages/magick/vignettes/intro.html#animated_graphics). Not saving PNGs saves time!
 
 But first let's create a `data.frame` with a number of points between cities dependent on the distance between them.
 
@@ -259,10 +261,13 @@ But first let's create a `data.frame` with a number of points between cities dep
 gc_routes_df_points <- gc_routes_df
 gc_routes_df_points <- dplyr::group_by(gc_routes_df_points, id)
 gc_routes_df_points <- dplyr::filter(gc_routes_df_points,
-                              order < round(distance/100000))
+                              order %in% seq(2, to = 360,
+                                             by = round(359/(distance[1]/100000))))
 gc_routes_df_points <- dplyr::ungroup(gc_routes_df_points)
 
 ```
+
+And then let's create the gif.
 
 ```{r}
 library("emojifont")
@@ -279,7 +284,7 @@ plot_one_moment <- function(moment, word,
   geom_path(data = gc_routes_df, 
             aes(long, lat, group = group), alpha = 0.5, color = "#88398A") + 
   geom_point(data = chapters_df, color = "#88398A", size = 0.8) + 
-  theme_map(base_size = 18) + 
+  theme_map(base_size =20) + 
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   ggtitle(paste0("R-Ladies global tour, next stop: ",
                  gc_routes_df_points[gc_routes_df_points$moment == moment,]$chapter), 
@@ -291,22 +296,21 @@ plot_one_moment <- function(moment, word,
             family="OpenSansEmoji",
                 size = 10)
   
-  outfil <- paste0("figs/airplane_", moment, ".png")
-  ggsave(outfil, p, width=5, height=3)
-
-  outfil
+  print(p)
 }
 
-purrr::map(gc_routes_df_points$moment,
+img <- image_graph(600, 400, res = 96)
+out <- purrr::walk(gc_routes_df_points$moment[1:2],
      plot_one_moment, word = word,
       chapters_df = chapters_df, 
       gc_routes_df = gc_routes_df) %>%
-  map(image_read) %>%
-  image_join() %>%
-  image_animate(fps=0.01) %>%
+dev.off(
+  
+)
+image_animate(img, fps=0.01) %>%
   image_write("rladiesglobal.gif")
 ```
 
 ![](https://github.com/masalmon/masalmon.github.io/blob/master/_source/rladiesglobal.gif?raw=true)
 
-The above gif could be even cooler if I used more frames, this way the trip of the bee would look smoother.
+How cute is this bee travelling the world? Now I hope Hannah will be happy with the gif, because it took a while to compute the whole thing, and now I'd prefer dreaming of being the bee and meeting awesome R-Ladies in many chapters!
