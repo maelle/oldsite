@@ -69,7 +69,7 @@ geolocate_chapter <- function(chapter){
                  formatted = results$formatted)
 }
 
-chapters_df <- purrr::map_df(chapters[1:10], geolocate_chapter)
+chapters_df <- purrr::map_df(chapters, geolocate_chapter)
 
 # add an index variable
 chapters_df <- dplyr::mutate(chapters_df, id = 1:nrow(chapters_df))
@@ -85,7 +85,7 @@ I'll use the [`ompr` package](https://github.com/dirkschumacher/ompr) inspired b
 We first need to compute the distance between chapters.
 
 ```{r}
-distance <- geosphere::distGeo(as.matrix(dplyr::select(chapters_df, long, lat))) %>% 
+distance <- geosphere::distm(as.matrix(dplyr::select(chapters_df, long, lat)), fun = geosphere::distGeo) %>% 
   round
 
 ```
@@ -299,15 +299,13 @@ plot_one_moment <- function(moment, word,
   print(p)
 }
 
-img <- image_graph(600, 400, res = 96)
-out <- purrr::walk(gc_routes_df_points$moment[1:2],
+img <- image_graph(800, 400, res = 96)
+out <- purrr::walk(gc_routes_df_points$moment,
      plot_one_moment, word = word,
       chapters_df = chapters_df, 
-      gc_routes_df = gc_routes_df) %>%
-dev.off(
-  
-)
-image_animate(img, fps=0.01) %>%
+      gc_routes_df = gc_routes_df) 
+dev.off()
+image_animate(img, fps=0.04) %>%
   image_write("rladiesglobal.gif")
 ```
 
