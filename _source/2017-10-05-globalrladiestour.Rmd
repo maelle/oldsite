@@ -80,13 +80,17 @@ knitr::kable(chapters_df[1:10,])
 
 # Planning the trip
 
-I'll use the [`ompr` package](https://github.com/dirkschumacher/ompr) inspired by this fantastic use case, ["Boris Johnson’s fully global itinerary of apology"](https://rstudio-pubs-static.s3.amazonaws.com/199542_7f23d4edf6094d89b386e9c875d09a1c.html) -- be careful, the code of this use case is slightly outdated. The `ompr` package supports modeling and solving [Mixed Integer Linear Programs](https://en.wikipedia.org/wiki/Integer_programming). I got a not so bad notion of what this means by looking [at this collection of use cases](https://dirkschumacher.github.io/ompr/articles/index.html). I'll just follow the same steps as [in the traveling salesman vignette](https://dirkschumacher.github.io/ompr/articles/problem-tsp.html), thanks Dirk!
+I'll use the [`ompr` package](https://github.com/dirkschumacher/ompr) inspired by this fantastic use case, ["Boris Johnson’s fully global itinerary of apology"](https://rstudio-pubs-static.s3.amazonaws.com/199542_7f23d4edf6094d89b386e9c875d09a1c.html) -- be careful, the code of this use case is slightly outdated. The `ompr` package supports modeling and solving [Mixed Integer Linear Programs](https://en.wikipedia.org/wiki/Integer_programming). I got a not so bad notion of what this means by looking [at this collection of use cases](https://dirkschumacher.github.io/ompr/articles/index.html). I'll just follow the same steps as [in the traveling salesman vignette](https://dirkschumacher.github.io/ompr/articles/problem-tsp.html), thanks Dirk! I actually had to update the model because it took ages to solve it, Dirk having suggested a slightly different formulation. So thanks again and sometimes you'd better ask (or nicely complain to) the expert!
 
-We first need to compute the distance between chapters.
+We first need to compute the distance between chapters. In kilometers since it's enough precision, and rounded because it tends to make results more stable.
 
 ```{r}
+convert_to_km <- function(x){
+  round(x/1000)
+}
+
 distance <- geosphere::distm(as.matrix(dplyr::select(chapters_df, long, lat)), fun = geosphere::distGeo) %>% 
-  round
+  convert_to_km()
 
 ```
 
