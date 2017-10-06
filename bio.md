@@ -5,7 +5,7 @@ title: Bio
 
 ## Professional experience
 
-* Since Oct 2015: __Statistician and data manager__, ISGlobal, Center for Research in Environmental Epidemiology (CREAL), Barcelona (Spain). I work for the [CHAI project](http://www.chaiproject.org/). CHAI means _Cardiovascular Health Effects of Air Pollution in Telangana, India_.
+* Oct 2015 - Oct 2017: __Statistician and data manager__, ISGlobal, Center for Research in Environmental Epidemiology (CREAL), Barcelona (Spain). I worked for the [CHAI project](http://www.chaiproject.org/). CHAI means _Cardiovascular Health Effects of Air Pollution in Telangana, India_.
 
 * Oct 2012 - Oct 2015: __PhD Student__, Department of Infectious diseases epidemiology, Robert Koch Institute, Berlin (Germany). Advisor: [Dr Michael Höhle](http://staff.math.su.se/hoehle/). 
 _Advances in Count Time Series Monitoring for Public Health Surveillance._
