@@ -11,7 +11,7 @@ Welcome on my website, where I'll showcase my work and some data analysis/R. My 
 
 My last name is Salmon like the fish, and my first name, Maëlle, is derived from a Celtic word that means princess or chief. It's pronounced "Ma-El" as "ma" in "macaroni" and as the Spanish "El". The accent on the e in ë doesn't change the pronounciation, so I guess it's my crown.
 
-I'm a statistician and data manager working in an epidemiological research center but I also have a background in biology/ecology. Science took me places in Europe. Currently, I live and work in Barcelona, Spain. I like open-source, open data, open science, and I work in an open space surrounded by nice colleagues.
+I'm a statistician and data manager working in an epidemiological research center but I also have a background in biology/ecology. Science took me places in Europe (see below). Currently, I live in Nancy, France. I like open-source, open data and open science.
 
 {% include map.html %}
 
