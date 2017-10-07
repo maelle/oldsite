@@ -48,7 +48,7 @@ head(chapters)
 
 ```r
 # Montenegro
-chapters[chapters == "HN\\, Montenegro"] <- "Herceg Novi, Montenegro"
+chapters[stringr::str_detect(chapters, "Montenegro")] <- "Herceg Novi, Montenegro"
 ```
 
 # Geolocating the chapters
