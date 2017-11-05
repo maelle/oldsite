@@ -3,12 +3,7 @@ layout: post
 title: "You beautiful, naïve, sophisticated newborn series"
 comments: true
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      message = FALSE,
-                      warning = FALSE, 
-                      cache = TRUE) 
-```
+
 
 My husband and I recently started watching the wonderful series "Parks and recreation" which was recommended to me by my fellow R-Lady Jennifer Thompson in [this very convincing thread](https://twitter.com/jent103/status/908162485689122816). The serie was even endorsed by other R-Ladies. Jennifer told me the first two seasons are not as good as the following ones, but that it was worth it to make it through them. We actually started enjoying the humor and characters right away!
 
@@ -24,8 +19,16 @@ Jennifer told me the first two seasons were not the best ones. My brother who is
 
 I said my husband and I were hooked on the series right from the first episode... what about other people? To answer this question, I downloaded [IMDB](http://www.imdb.com/) ratings for the show! I first tried using R packages accessing the [OMDB API](http://www.omdbapi.com/), but [this one](https://github.com/RMHogervorst/imdb) was outdated and [this up-to-date one](https://github.com/hrbrmstr/omdbapi) was not but taught me the API no longer returns ratings by season... So I scraped the IMDB website using the [`rvest` package](https://github.com/hadley/rvest), after checking I was allowed to do so thanks to the [`robotstxt` package](https://github.com/ropenscilabs/robotstxt).
 
-```{r}
+
+```r
 robotstxt::paths_allowed("http://www.imdb.com/title/tt1266020/eprate")
+```
+
+```
+## [1] TRUE
+```
+
+```r
 library("rvest")
 imdb_page <- html("http://www.imdb.com/title/tt1266020/eprate")
 ratings <- imdb_page %>%
@@ -35,12 +38,22 @@ ratings <- imdb_page %>%
   .[,1:4]
 
 knitr::kable(ratings[1:5,])
-
 ```
+
+
+
+|    #|Episode               | UserRating|UserVotes |
+|----:|:---------------------|----------:|:---------|
+| 7.13|One Last Ride: Part 2 |        9.7|2,407     |
+| 7.12|One Last Ride: Part 1 |        9.6|1,934     |
+| 7.40|Leslie and Ron        |        9.6|1,842     |
+| 6.22|Moving Up: Part 2     |        9.4|1,273     |
+| 5.14|Leslie and Ben        |        9.3|1,205     |
 
 I just had to wrangle this table a little bit.
 
-```{r}
+
+```r
 names(ratings)[1] <- "number"
 ratings <- tidyr::separate(ratings, col = number,
                            into = c("season", "episode"),
@@ -48,13 +61,12 @@ ratings <- tidyr::separate(ratings, col = number,
 ratings <- dplyr::mutate(ratings, UserVotes = stringr::str_replace(UserVotes, ",", ""))
 ratings <- dplyr::mutate(ratings, UserVotes = as.numeric(UserVotes))
 ratings <- dplyr::mutate(ratings, episode = as.numeric(episode))
-
 ```
 
 And then I could at last plot the ratings and see whether the two first seasons were not that loved! Before that I quickly assessed whether there was an ok number of votes for all episodes, and that this did not vary widely over seasons, which was the case.
 
-```{r}
 
+```r
 library("ggplot2")
 library("hrbrthemes")
 ggplot(ratings, aes(episode, UserRating,
@@ -66,6 +78,8 @@ ggplot(ratings, aes(episode, UserRating,
   theme_ipsum(base_size = 20,
               axis_title_size = 20)
 ```
+
+![plot of chunk unnamed-chunk-3](/figure/source/2017-11-05-newborn-serie/unnamed-chunk-3-1.png)
 
 Note that for the first season, there are too few points for actually doing a smoothing. Looking at the plot I guess we can say the first season with its only 6 episodes was slightly less enjoyed! I am very thankful that the first season was deemed good enough to continue the series though! Besides I am thankful that it was so simple to answer this crucial question.
 
@@ -80,12 +94,20 @@ The single problem I experienced when doing this work was that I had to download
 To make the wordcloud I very simply followed [this blog post of François Keck's](http://www.pieceofk.fr/?p=437). It doesn't get easier than that... which is great given I have very little time at the moment.
 
 
-```{r}
+
+```r
 library("subtools")
 library("tm")
 library("SnowballC")
 library("wordcloud")
 parks_and_rec <- read.subtitles.serie(dir = paste0(getwd(), "/data/pr/"))
+```
+
+```
+## Read: 4 seasons, 68 episodes
+```
+
+```r
 corpus <- tmCorpus(parks_and_rec)
 
 corpus <- tm_map(corpus, content_transformer(tolower))
@@ -103,6 +125,8 @@ colnames(TDM.season) <- paste("S", 1:4)
 set.seed(1)
 comparison.cloud(TDM.season, title.size = 1, max.words = 100, random.order = T)
 ```
+
+![plot of chunk unnamed-chunk-4](/figure/source/2017-11-05-newborn-serie/unnamed-chunk-4-1.png)
 
 It doesn't look anything like [Leslie's wordcloud](http://ifiwasthelastgirl.tumblr.com/post/77940482792/can-we-talk-about-leslies-word-cloud) but it made me happy because I had already forgotten about some words or names from the previous seasons! 
 

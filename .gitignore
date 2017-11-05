@@ -6,6 +6,7 @@ _source/data/p1sommar.csv
 _source/data/p1_wiki_data.csv
 _source/data/artists_info.csv
 _source/data/tracks.csv
+_source/data/pr
 _source/data/enriched_artists_info.csv
 lala.RData
 .httr-oauth
