@@ -1,0 +1,25 @@
+---
+layout: post
+title: "You beautiful, naïve, sophisticated newborn series"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+My husband and I recently started watching the wonderful series "Parks and recreation" which was recommended to me by my fellow R-Lady Jennifer Thompson in [this very convincing thread](https://twitter.com/jent103/status/908162485689122816). The serie was even endorsed by other R-Ladies. Jennifer told me the first two seasons are not as good as the following ones, but that it was worth it to make it through them. We actually starting loving the series right away!
+
+Then, this week while watching the show, one of the characters did a very basic text analysis that made me feel like imitating him for a blog post -- my husband told me it was very Leslie of me to plan something while doing something else which was probably one of the best compliments he ever paid me. I [tested my idea](https://twitter.com/ma_salmon/status/926167897478778880) on other Leslie fans, and they seemed to think it was a great idea... and that this post should be the beginning of a series of R-Ladies blog posts about Parks and recreation! 
+
+In this blog post, I'll therefore inaugurate this series, what a honor! I will answer two questions about the TV series.
+
+<!--more-->
+
+# Less than stellar first seasons?
+
+So Jennifer told me the first two seasons were not the best ones. My brother who is a cruel man (just kidding) actually told me this was a very good joke idea: you tell someone a very bad TV series starts getting awesome after a few seasons that you need to watch in order to know the characters... therefore forcing them to loose their time and sanity in front of the screen, ah! Luckily Jennifer wasn't doing that.
+
+I said my husband and I were hooked on the series right from the first episode... what about other people? To answer this question, I downloaded IMDB ratings for the show! I first tried using R packages accessing the OMDBI API, but this one was outdated and this one was not but taught me the API no longer returns ratings by season... So I scraped the IMDB website, after checking I was allowed to do so.
