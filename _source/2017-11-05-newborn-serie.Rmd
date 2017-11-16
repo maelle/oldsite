@@ -61,7 +61,7 @@ ggplot(ratings, aes(episode, UserRating,
                     color = season)) +
   geom_smooth()+
   geom_point()  +
-  xlab("IMDB rating") +
+  ylab("IMDB rating") +
   viridis::scale_color_viridis(discrete = TRUE) +
   theme_ipsum(base_size = 20,
               axis_title_size = 20)

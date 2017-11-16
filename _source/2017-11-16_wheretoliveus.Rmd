@@ -1,0 +1,83 @@
+---
+layout: post
+title: "Where to live in the US"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+I was fascinated by this [xkcd comic](https://xkcd.com/1916/) about where to live based on your temperature preferences. I also thought it'd be fun to try to make a similar one from my R session! Since I'm no meteorologist and was a bit unsure of how to define winter and summer, and of their relevance in countries like, say, India which has monsoon, I decided to focus on a single country located in one hemisphere only and big enough to offer some variety... the USA! So, dear American readers, where should you live based on your temperature preferences?
+
+<!--more-->
+
+# Defining data sources
+
+## Weather data
+
+The data for the original xkcd graph comes from [weatherbase](http://www.weatherbase.com/). I changed sources because 1) I was not patient enough to wait for weatherbase to send me a custom dataset which I imagine is what xkcd author did and 2) I'm the creator of [a cool package accessing airport weather data](http://ropensci.github.io/riem/) for the whole word including the US! My package is called "riem" like "R Iowa Environmental Mesonet" (the source of the data, a [fantastic website](https://mesonet.agron.iastate.edu/request/download.phtml?network=IN__ASOS)) and "we laugh" in Catalan (at the time I wrote the package I was living in Barcelona and taking 4 hours of Catalan classes a week!). It's a simple but good package which underwent [peer-review](https://github.com/ropensci/onboarding/issues/39) at rOpenSci onboarding, thank you [Brooke](https://twitter.com/gbwanderson)!
+
+I based my graph on data from the last winter and the last summer. I reckon that one should average over more years, but nothing important is at stake here, right? 
+
+## Cities sample
+
+My package has a function for downloading weather data for a given airport based on its ID. For instance Los Angeles airport is LAX. At that point I just needed a list of cities in the US with their airport code. Indeed with my package you can get all airport weather networks, one per US state, and all the stations withing that network... this is a lot of airports with no way to automatically determine how big they are! And to get the city name since it'd be so hard to parse the airport name I'd have resorted to geocoding with [e.g. this package](https://github.com/ropensci/opencage). A bit complicated for a simple fun graph!
+
+So I went to the [Wikipedia page of the busiest airports in the US](https://en.wikipedia.org/wiki/List_of_the_busiest_airports_in_the_United_States) and ended up getting [this dataset](https://www.bts.gov/content/passengers-boarded-top-50-us-airports) from the US Department of Transportation (such a weird open data format by the way... I basically copy-pasted the first two columns in a spreadsheet!). This is not perfect, getting a list of major cities in every state would be more fair but hey reader I want you to live in a really big city so that I might know where it is.
+
+## Ok so let's get the data
+
+```{r}
+us_airports <- readr::read_csv("data/2017-11-16_wheretoliveus_airports.csv")
+knitr::kable(us_airports[1:10,])
+```
+
+I first opened my table of `r nrow(us_airports)` airports. Then, I made the call to the Ioaw Environment Mesonet.
+
+```{r}
+weather_summer_data <- purrr::map_df(us_airports$Code, riem::riem_measures,
+                                    date_start = "2017-06-01",
+                                    date_end = "2017-08-31")
+weather_winter_data <- purrr::map_df(us_airports$Code, riem::riem_measures,
+                                    date_start = "2016-12-01",
+                                    date_end = "2017-02-28")
+```
+
+```{r}
+
+weather_summer_data <- dplyr::filter(weather_summer_data,
+                                     !is.na(tmpf), !is.na(dwpf))
+
+weather_winter_data <- dplyr::filter(weather_winter_data,
+                                     !is.na(tmpf))
+```
+
+I now need to compute quality metrics: how many days do we have for each station, and how many measures in a day?
+
+
+```{r}
+library("magrittr")
+summer_metrics <- weather_summer_data %>%
+  dplyr::group_by(station) %>%
+  dplyr::summarize(n_days = length(unique(as.Date(valid))))
+psych::describe(summer_metrics$n_days)
+```
+
+# Calculating the two weather values
+
+I started by converting all temperatures to Celsius degrees because although I like you, American readers, Farenheit degrees do not mean anything to me which is problematic for checking results plausibility for instance. I was lazy and just used Brooke Anderson's (yep the same Brooke who reviewed `riem` for rOpenSci) [`weathermetrics` package](https://github.com/geanders/weathermetrics/).
+
+
+
+The xkcd graph uses average temperature in the winter and average Humidex in the summer. The author explained Humidex "combines heat and dew point". Once again I went to [Wikipedia](https://en.wikipedia.org/wiki/Humidex) and found the formula. I'm not in a mood to fiddle with formula writing on the blog so please go there if you want to see it. There's also a package with a function returning the Humidex. I wrote my own function but checked the results with that package. 
+
+```{r}
+calculate_humidex <- function(temp, dewpoint){
+  temp + 0.5555*(6.11 *exp(5417.7530*(1/273.16 + 1/(273.15 + dewpoint))) - 10)
+}
+
+calculate_humidex
+```
