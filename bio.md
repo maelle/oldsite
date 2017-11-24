@@ -5,6 +5,8 @@ title: Bio
 
 ## Professional experience
 
+* I am currently looking for a remote data scientist/research software engineer position starting in January 2018 after my maternity leave. Don't hesitate to contact me! 
+
 * Oct 2015 - Oct 2017: __Statistician and data manager__, ISGlobal, Center for Research in Environmental Epidemiology (CREAL), Barcelona (Spain). I worked for the [CHAI project](http://www.chaiproject.org/). CHAI means _Cardiovascular Health Effects of Air Pollution in Telangana, India_.
 
 * Oct 2012 - Oct 2015: __PhD Student__, Department of Infectious diseases epidemiology, Robert Koch Institute, Berlin (Germany). Advisor: [Dr Michael Höhle](http://staff.math.su.se/hoehle/). 
