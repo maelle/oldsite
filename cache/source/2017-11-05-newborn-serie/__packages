@@ -1,0 +1,12 @@
+base
+xml2
+rvest
+bindrcpp
+ggplot2
+hrbrthemes
+subtools
+NLP
+tm
+SnowballC
+RColorBrewer
+wordcloud

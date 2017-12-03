@@ -1,0 +1,14 @@
+layout: post
+title: "New release of the music of Les Mills Body Pump, with Spotify data"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+Do you remember [my post analysing the music of Les Mills Body Pump with Spotify data](http://www.masalmon.eu/2017/10/01/bodypump/)? I thought the API did not return features by song, but it actually does, thanks Łukasz Prokulski for telling me in the comments! You can actually read this commenter's post in Polish using Spotify data [here](http://prokulski.net/index.php/2017/03/01/jesienna-deprecha/).
+
+<!--more-->

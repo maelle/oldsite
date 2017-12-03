@@ -11,6 +11,7 @@ _source/data/enriched_artists_info.csv
 _source/data/2017-11-16_wheretoliveus_airports.csv 
 _source/data/2017-11-16_wheretoliveus_winter_weather.RData
 _source/data/2017-11-16_wheretoliveus_summer_weather.RData
+_source/data/2017-06-03-twitter/
 lala.RData
 .httr-oauth
 .Rhistory
