@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Names of b.....s badder than Taylor Swift"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+Again, a Twitter trend sent me to my R prompt... Here is a [bit of context](http://junkee.com/taylor-swift-badder-bitch/137625). My summary: Taylor Swift apparently plays the bad girl in her new album and a fan of hers asked a question...
+
+<blockquote class="twitter-tweet" data-lang="ca"><p lang="en" dir="ltr">Name a bitch badder than Taylor Swift 😍😛😤 <a href="https://t.co/AkSyQBUIME">pic.twitter.com/AkSyQBUIME</a></p>&mdash; Nutella (@xnulz) <a href="https://twitter.com/xnulz/status/928857792982781952?ref_src=twsrc%5Etfw">10 de novembre de 2017</a></blockquote>
+
+
+The tweet was then quoted by many people mentioning badass women, and I decided to have a look at these heroes!
+
+<!--more-->
+
+# Getting the tweets
+
+I was a bit lazy and asked Mike Kearney, `rtweet` maintainer, how to find tweets quoting a tweet, to which [Bob Rudis answered](https://twitter.com/hrbrmstr/status/937340032456814592). Now that I even had the code, it was no trouble at all getting the data. I added the filtering steps myself, see, I'm not _that_ lazy. I also removed the link to the quoted tweet that was at the end of each tweet. 
+
+```r
+question_tweet <- "928857792982781952"
+badass <-  rtweet::search_tweets(question_tweet, n = 18000, include_rts = FALSE)
+badass <- dplyr::filter(badass, is_quote_status, quote_status_id == question_tweet)
+badass <- dplyr::mutate(badass, text = stringr::str_replace(text, "https://t\\.co/.*$", ""))
+badass <- dplyr::mutate(badass, text = trimws(text))
+readr::write_csv(badass, path = "data/2017-12-03-badderb_badass.csv")
+```
+
+```{r, echo = FALSE}
+badass<- readr::read_csv("data/2017-12-03-badderb_badass.csv")
+```
+
+I obtained `r nrow(badass)` tweets. Not bad!
+
+```{r}
+library("magrittr")
+set.seed(20171015)
+indices <- sample.int(n = 15)
+badass$text[indices]
+
+```
+
+
+# Who are the badder b.....s?
+
+Quite a few of the tweets from this trend contained the name of someone. In order to extract these names, I resorted to a language processing method called entity extraction, the entity here being a person. For that, I could have used an [extractor module](https://app.monkeylearn.com/main/extractors/ex_isnnZRbS/) of the Monkeylearn platform [via my own `monkeylearn` package](https://github.com/ropensci/monkeylearn).
+
+Instead, I chose to illustrate a different method: using the [`clean`]`NLP` package{(https://github.com/statsmaths/cleanNLP) that I know from [the excellent R Journal paper presenting it](https://journal.r-project.org/archive/2017/RJ-2017-035/RJ-2017-035.pdf). Among other things, it serves as an interface between R and the [Python library spaCy](https://spacy.io/) and also as an interface between R and [the coreNLP Java library](https://stanfordnlp.github.io/CoreNLP/). Installing these tools is the painful part of the setup, but 1) you only need to install one of them 2) there are detailed instructions [here](https://github.com/statsmaths/cleanNLP#backends) 3) once your tool is installed, using the package is a breeze (and well independent of any rate limit contrary to `monkeylearn` use). I am at that breeze stage, you can be jealous. 
+ 
+There were a few tweets with infuriating encoding issues, BOM or something like that, and I decided to just ignore them by using `purrr::possibly`. I obviously did this to illustrate the use of this `purrr` function, not out of laziness.
+ 
+```r
+library("cleanNLP")
+init_spaCy()
+# we need to remove characters like "\u0098"
+badass <- dplyr::mutate(badass, text = enc2native(text))
+
+get_entities_with_text <- function(x){
+  obj <- run_annotators(x, as_strings = TRUE)
+  entities <- get_entity(obj)
+  entities$text <- x
+  entities
+}
+
+possibly_get_entities <- purrr::possibly(get_entities_with_text,
+                                         otherwise = NULL)
+
+entities <- purrr::map_df(badass$text, possibly_get_entities)
+
+readr::write_csv(entities, path = "data/2017-12-03-badderb_entities.csv")
+
+```
+
+```{r, echo = FALSE}
+entities <- readr::read_csv("data/2017-12-03-badderb_entities.csv")
+```
+
+I got at least one entity for `r length(unique(entities$text))` out of `nrow(badass)` tweets, and at least one _person_ for `r length(unique(entities[entities$entity_type == "PERSON",]$text))`
+
+
+```{r}
+entities %>% 
+  head(n = 15) %>%
+  knitr::kable()
+
+```
+
+We get this kind of entities: `r unique(entities$entity_type)`.
