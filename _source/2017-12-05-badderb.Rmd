@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Names of b.....s badder than Taylor Swift"
+title: "Names of b.....s badder than Taylor Swift, a class in women's studies?"
 comments: true
 ---
 ```{r setup, include=FALSE}
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE) 
 ```
 
-Again, a Twitter trend sent me to my R prompt... Here is a [bit of context](http://junkee.com/taylor-swift-badder-bitch/137625). My summary: Taylor Swift apparently plays the bad girl in her new album and a fan of hers asked a question...
+[Once](http://www.masalmon.eu/2016/10/02/first7jobs-repost/) [again](http://www.masalmon.eu/2017/02/05/actuallivingscientists/), a Twitter trend sent me to my R prompt... Here is a [bit of context](http://knowyourmeme.com/memes/name-a-badder-bitch-than-taylor-swift). My summary: Taylor Swift apparently plays the bad girl in her new album and a fan of hers asked a question...
 
 <blockquote class="twitter-tweet" data-lang="ca"><p lang="en" dir="ltr">Name a bitch badder than Taylor Swift 😍😛😤 <a href="https://t.co/AkSyQBUIME">pic.twitter.com/AkSyQBUIME</a></p>&mdash; Nutella (@xnulz) <a href="https://twitter.com/xnulz/status/928857792982781952?ref_src=twsrc%5Etfw">10 de novembre de 2017</a></blockquote>
 
@@ -41,17 +41,33 @@ I obtained `r nrow(badass)` tweets. Not bad!
 ```{r}
 library("magrittr")
 set.seed(20171015)
-indices <- sample.int(n = 15)
+
+indices <- sample.int(n = nrow(badass), size = 7)
 badass$text[indices]
 
 ```
 
+# Unnamed badder b.....s: your mother and grand-mother
+
+Out of `r nrow(badass)`, `r sum(grepl("mother", badass$text))` contained the word "mother" -- I haven't looked for the word "mum" and haven't checked for the fact that it is someone from the family of the tweet author. Here a few of the personal stories (or not) identified with this quick and dirty method.
+
+```{r}
+
+set.seed(20171015)
+mothers <- dplyr::filter(badass, stringr::str_detect(text, "mother"))
+indices <- sample.int(n = 15)
+mothers$text[indices]
+
+```
+
+Can we talk about that belly button thing?! I'm also happy to see a diversity of things they were recognized for. 
+
 
 # Names of the badder b.....s
 
-Quite a few of the tweets from this trend contained the name of someones. In order to extract these names, I resorted to a language processing method called entity extraction, the entity here being a person. For that, I could have used an [extractor module](https://app.monkeylearn.com/main/extractors/ex_isnnZRbS/) of the Monkeylearn platform [via my own `monkeylearn` package](https://github.com/ropensci/monkeylearn).
+Quite a few of the tweets from this trend contained the name of someone. In order to extract these names, I resorted to a language processing method called entity extraction, the entity here being a person. For that, I could have used an [extractor module](https://app.monkeylearn.com/main/extractors/ex_isnnZRbS/) of the Monkeylearn platform [via my own `monkeylearn` package](https://github.com/ropensci/monkeylearn).
 
-Instead, I chose to illustrate a different method: using the [`clean`]`NLP` package{(https://github.com/statsmaths/cleanNLP) that I know from [the excellent R Journal paper presenting it](https://journal.r-project.org/archive/2017/RJ-2017-035/RJ-2017-035.pdf). Among other things, it serves as an interface between R and the [Python library spaCy](https://spacy.io/) and also as an interface between R and [the coreNLP Java library](https://stanfordnlp.github.io/CoreNLP/). Installing these tools is the painful part of the setup, but 1) you only need to install one of them 2) there are detailed instructions [here](https://github.com/statsmaths/cleanNLP#backends) 3) once your tool is installed, using the package is a breeze (and well independent of any rate limit contrary to `monkeylearn` use). I am at that breeze stage, you can be jealous. 
+Instead, I chose to illustrate a different method: using the [`cleanNLP` package](https://github.com/statsmaths/cleanNLP) that I know from [the excellent R Journal paper presenting it](https://journal.r-project.org/archive/2017/RJ-2017-035/RJ-2017-035.pdf). Among other things, it serves as an interface between R and the [Python library spaCy](https://spacy.io/) and also as an interface between R and [the coreNLP Java library](https://stanfordnlp.github.io/CoreNLP/). Installing these tools is the painful part of the setup, but 1) you only need to install one of them 2) there are detailed instructions [here](https://github.com/statsmaths/cleanNLP#backends) 3) once your tool is installed, using the package is a breeze (and well independent of any rate limit contrary to `monkeylearn` use). I am at that breeze stage, you can be jealous. 
  
 There were a few tweets with infuriating encoding issues, BOM or something like that, and I decided to just ignore them by using `purrr::possibly`. I obviously did this to illustrate the use of this `purrr` function, not out of laziness.
  
@@ -86,7 +102,7 @@ I got at least one entity for `r length(unique(entities$text))` out of `r nrow(b
 
 # So, who are you, badder b.....s?
 
-We get this kind of entities: `r unique(entities$entity_type)`. I'm more interested in PERSONand no, I'm not shouting. I chose to look at the top 12 in order to get a top 10 excluding Taylor Swift herself.
+We get this kind of entities: `r unique(entities$entity_type)`. I'm more interested in PERSON and no, I'm not shouting. I chose to look at the top 12 in order to get a top 10 excluding Taylor Swift herself.
 
 ```{r}
 entities %>%
@@ -114,14 +130,17 @@ entities %>%
   .$text
 ```
 
-Doing this one also gets the name of many other women. Moreover, if writing history lessons, one should have several sources, right? What about Wikidata [like in this other blog post of mine](http://www.masalmon.eu/2017/08/06/p1/)?
+Doing this one also gets the name of many other women. Moreover, if writing history lessons, one should have several sources, right? What about Wikidata [like in this other blog post of mine](http://www.masalmon.eu/2017/08/06/p1/)? It should have data for at least the most famous badass women.
 
 ```{r}
+# add a function for getting a silent answer
+quietly_query <- purrr::quietly(WikidataQueryServiceR::query_wikidata)
+
 # function for getting someone's data
-get_someone_data <- function(name, pb = NULL){
+get_wikidata <- function(name, pb = NULL){
   if (!is.null(pb)) pb$tick()$print()
   Sys.sleep(1)
-  item <- WikidataR::find_item(name, language = "sv")
+  item <- WikidataR::find_item(name, language = "en")
   # sometimes people have no Wikidata entry so I need this condition
   if(length(item) > 0){
     entity_code <- item[[1]]$id
@@ -134,7 +153,7 @@ get_someone_data <- function(name, pb = NULL){
                      hint:Query hint:optimizer 'None' .
                      {	BIND(entity:",entity_code," AS ?valUrl) .
                      BIND(\"N/A\" AS ?propUrl ) .
-                     BIND(\"identity\"@sv AS ?propLabel ) .
+                     BIND(\"identity\"@en AS ?propLabel ) .
                      }
                      UNION
                      {	entity:", entity_code," ?propUrl ?valUrl .
@@ -144,13 +163,14 @@ get_someone_data <- function(name, pb = NULL){
                      }
                      
                      ?valUrl rdfs:label ?valLabel
-                     FILTER (LANG(?valLabel) = 'sv') .
+                     FILTER (LANG(?valLabel) = 'en') .
                      OPTIONAL{ ?valUrl wdt:P18 ?picture .}
-                     FILTER (lang(?propLabel) = 'sv' )
+                     FILTER (lang(?propLabel) = 'en' )
                      }
                      ORDER BY ?propUrl ?valUrl
                      LIMIT 200")
-    results <- WikidataQueryServiceR::query_wikidata(query)
+    results <- quietly_query(query) 
+    results <- results$result
     results$name<- name
     results
   }else{
@@ -159,12 +179,57 @@ get_someone_data <- function(name, pb = NULL){
    
   }
 
-pb <- dplyr::progress_estimated(length(unique(sommargaester$name)))
-sommargaester_wiki <- purrr::map_df(unique(sommargaester$name),
-                                    get_someone_data, pb=pb)
-
-sommargaester <- dplyr::left_join(sommargaester, sommargaester_wiki, by = "name")
-
-readr::write_csv(sommargaester, path = "data/p1_wiki_data.csv")
 
 ```
+
+Yes, I just had to replace all occurrences of "sv" with "en" to get a function for this post. I'd like to try to write an automatic text about badass women. 
+
+```{r}
+
+get_a_string <- function(prop, prep, wikidata){
+  answer <- dplyr::filter(wikidata, propLabel == prop) %>%
+    .$valLabel %>%
+    unique() %>%
+    toString
+  if(answer == ""){
+    return("")
+  }else{
+    return(paste(prep, answer))
+  }
+}
+
+tell_me_about <- function(name){
+  wikidata <- get_wikidata(name)
+  questions <- c("occupation", "country of citizenship",
+                 "field of work", "award received")
+  
+  words <- c("a", "from", 
+             "known from her work in", "and who was awarded")
+  
+  strings <- purrr::map2_chr(questions, words, 
+                            get_a_string,
+                            wikidata = wikidata)
+  
+  strings <- strings[strings != ""]
+  
+  sentence <- paste(name, "was", toString(strings))
+  sentence <- paste0(sentence, ".")
+  return(sentence)
+}
+
+```
+
+Ok, let's try our automatic history writing function. It won't work for Dora and Joan, sadly.
+
+```{r}
+tell_me_about("Lyudmila Pavlichenko")
+tell_me_about("Myra Hindley")
+tell_me_about("Harriet Tubman")
+
+```
+
+Not many details clearly, but not too bad for a quickly written history hum bot, if I can call it so.
+
+# So, happy, Nutella?
+
+This was my contribution to the meme following Nutella's viral tweet. I am thankful for the badass women I did end up discovering thanks to the tweets, and am waiting for someone to replace the lyrics of all Taylor Swift's songs with gems from this Twitter trend.
