@@ -1,3 +1,4 @@
+---
 layout: post
 title: "How to develop good R packages (for open science)"
 comments: true
@@ -9,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE) 
 ```
 
-I was invited to [an exciting ecology & R hackathon](https://methodsblog.wordpress.com/2017/11/16/hackathon-challenges/) in my capacity as a co-editor for [rOpenSci onboarding system of packages](https://github.com/ropensci/onboarding). It also worked well geographically since this hackathon was in Ghent (Belgium) which is not too far away from my new city, Nancy (France). The idea was to have me talk about my "top tips on how to design and develop high-quality, user-friendly R software" in the context of open science, and then be a facilitator at the hackathon. 
+I was invited to [an exciting ecology & R hackathon](https://methodsblog.wordpress.com/2017/11/16/hackathon-challenges/) in my capacity as a co-editor for [rOpenSci onboarding system of packages](https://github.com/ropensci/onboarding). It also worked well geographically since this hackathon was to take place in Ghent (Belgium) which is not too far away from my new city, Nancy (France). The idea was to have me talk about my "top tips on how to design and develop high-quality, user-friendly R software" in the context of open science, and then be a facilitator at the hackathon. 
 
-The talk topic sounded a bit daunting but as soon as I started preparing the talk I got all excited gathering resources -- and as you may imagine since I was asked to talk about *my* tips I did not need to try & be 100% exhaustive. I was not starting from scratch obviously: we at rOpenSci already have well-formed opinions about such software, and I had given a talk about [automatic tools for package improvement](http://www.masalmon.eu/2017/06/17/automatictools/) whose content was part of my top tips. 
+The talk topic sounded a bit daunting but as soon as I started preparing the talk I got all excited gathering resources -- and as you may imagine since I was asked to talk about *my* tips I did not need to try & be 100% exhaustive. I was not starting from scratch obviously: we at rOpenSci already have [well-formed opinions](https://github.com/ropensci/onboarding/blob/master/packaging_guide.md) about such software, and I had given a talk about [automatic tools for package improvement](http://www.masalmon.eu/2017/06/17/automatictools/) whose content was part of my top tips. 
 
 As I've done in the past with my talks, I chose to increase the impact/accessibility of my work by sharing it on this blog. I'll also share this post on the day of the hackathon to provide my audience with a more structured document than my slides, in case they want to keep some trace of what I said (and it helped me build a good narrative for the talk!). Most of these tips will be useful for package development in general, and a few of them specific to scientific software.
 
@@ -41,7 +42,7 @@ Then, once you've really decided that you want to write and publish this R packa
 
 * Make your package compatible with the workflow of your users. For instance, if your package has something to do with time series, it's probably best to try and make your output compatible with time series classes people are used to, and for which there are other packages available.
 
-* Do not get too ambitious. For instance, do you want to have a specific plotting method for your output, or can you rely on your users' using say `ggplot2`, merely giving them an example of how to do so in a vignette? I've heard that's the Unix philosophy, small pieces building on top each other. This will save you time, and let you concentrate on the novel and important piece you're providing to the community.
+* Do not get too ambitious. For instance, do you want to have a specific plotting method for your output, or can you rely on your users' using say `ggplot2`, merely giving them an example of how to do so in a vignette? I've heard that's part of the [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy), small pieces building on top each other. This will save you time, and let you concentrate on the novel and important piece you're providing to the community.
 
 Once you've decided on all of this, maybe sketch a to-do list. If you're already familiar with Github, which you will be after reading some books recommended in the next section, you can have one issue per item, or even take advantage of [Github milestones feature](https://guides.github.com/features/issues/). You don't need to have a master plan for your whole package life, because one can hope your users will also influence the future features, and well you'll keep getting smarter as time goes by and the ideas will keep flowing. 
 
@@ -103,7 +104,7 @@ I want to underline one point: please indicate the URL of your code repository a
 
 Another important point is that if your package is on CRAN, and your code repository on Github, it's good to:
 
-* [create a release](https://help.github.com/articles/creating-releases/) and attach the corresponding NEWS each time you upload a new version on CRAN (otherwise your release is a surprise release).
+* [create a release](https://help.github.com/articles/creating-releases/) and attach the corresponding NEWS each time you upload a new version on CRAN (otherwise your release is a surprise release). One reason for having releases is archiving, this way users can download and install a given version quite easily. Another one is that users might use tools such as [Sibbell](https://about.sibbell.com/) to be notified of new releases.
 
 * have a [CRAN badge](https://www.r-pkg.org/services#badges) in the README, see [this README for instance](https://github.com/ropensci/ropenaq). It's easier to install packages from CRAN so people might want to do that, they can see what the latest CRAN version number is, and well you recognize the hosting on CRAN in a way, because you should be thankful for CRAN work.
 
@@ -115,7 +116,7 @@ These tools are all here to help you get a better package before releasing it.
 
 ## R CMD check
 
-Use [`devtools::check()`](http://r-pkgs.had.co.nz/check.html)! The link I've put here why you should, and the efforts you should put in solving the different messages it'll output.
+Use [`devtools::check()`](http://r-pkgs.had.co.nz/check.html)! The link I've put here explains why you should, and the efforts you should put in solving the different messages it'll output.
 
 ## Continuous integration
 
@@ -157,13 +158,15 @@ Once you've written all these documentation parts, create a website for your pac
 
 ## User-friendly programming
 
-I'll give three tips here, partly inspired by [this excellent essay by François Chollet](https://blog.keras.io/user-experience-design-for-apis.html). I want to share these two sentences from the essay with you: " In the long run, good design wins, because it makes its adepts more productive and more impactful, thus spreading faster than user-hostile undesign. Good design is infectious.".
+I'll give four tips here, partly inspired by [this essay by François Chollet](https://blog.keras.io/user-experience-design-for-apis.html). I want to share these two sentences from the essay with you: " In the long run, good design wins, because it makes its adepts more productive and more impactful, thus spreading faster than user-hostile undesign. Good design is infectious.".
 
 * Have error and warning messages that are easy to understand. For instance, if communicating with an API, then translate http errors.
 
 * Check the input. For instance, If a parameter provided to a function should be a positive number, check it is and if it is not, return a friendly error message.
 
 * Offer shortcuts. For instance, if your function relies on an API key being provided, you can silently search for it in environment variables without the user doing anything, provided you explain how to store an environment variable in the documentation. This is how my [`opencage`](https://github.com/ropensci/opencage) works if you want an example. Noam Ross made the PR that added this functionality, and I agree that it makes the package user-friendler. Likewise, have good default values of other parameters if possible.
+
+* Choose a good naming scheme that will allow your users to more easily remember the names of functions. You could choose to have a prefix for all the functions of your package, which is recommended by rOpenSci, and [discussed in this very interesting and nuanced blog post by Jon Calder](http://joncalder.co.za/2017-12-04-naming-things-is-hard/).
 
 ## Promotion 
 
