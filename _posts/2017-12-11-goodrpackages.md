@@ -11,6 +11,8 @@ The talk topic sounded a bit daunting but as soon as I started preparing the tal
 
 As I've done in the past with my talks, I chose to increase the impact/accessibility of my work by sharing it on this blog. I'll also share this post on the day of the hackathon to provide my audience with a more structured document than my slides, in case they want to keep some trace of what I said (and it helped me build a good narrative for the talk!). Most of these tips will be useful for package development in general, and a few of them specific to scientific software.
 
+<!--more-->
+
 # What is a good R package in my opinion?
 
 The answer to this will appear in the blog post but if I had to say this in one sentence, I'd say that a good R package for open science is an useful, robust and well-documented package that's easy to find and that users will trust.
