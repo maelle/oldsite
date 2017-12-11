@@ -27,7 +27,7 @@ I think you should ask yourself these questions before starting to code away:
 
 * Will this piece of software really be useful to someone else than you? If not, building a package will still save you time, but you maybe don't need to put a lot of effort into it. If you doubt, you can ask around you if other people would be interested in using it. Brainstorming package ideas is part of what happened before the hackathon, in a collaborative document.
 
-* Is your idea really new, or is there already a package out there performing the exast same task? 
+* Is your idea really new, or is there already a package out there performing the exact same task? 
 
 * If there is one, would your implementation bring something to the market, e.g. an user-friendlier implementation? There are for instance two R packages that interface the Keras Deep Learning Library, [`keras`](https://keras.rstudio.com/) and [`kerasR`](https://github.com/statsmaths/kerasR). In some cases having several packages will be too much, in some cases it won't because one package will suit some users better. 
 
@@ -41,7 +41,7 @@ Then, once you've really decided that you want to write and publish this R packa
 
 * Do not get too ambitious. For instance, do you want to have a specific plotting method for your output, or can you rely on your users' using say `ggplot2`, merely giving them an example of how to do so in a vignette? I've heard that's part of the [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy), small pieces building on top each other. This will save you time, and let you concentrate on the novel and important piece you're providing to the community.
 
-Once you've decided on all of this, maybe sketch a to-do list. If you're already familiar with Github, which you will be after reading some books recommended in the next section, you can have one issue per item, or even take advantage of [Github milestones feature](https://guides.github.com/features/issues/). You don't need to have a master plan for your whole package life, because one can hope your users will also influence the future features, and well you'll keep getting smarter as time goes by and the ideas will keep flowing. 
+Once you've decided on all of this, maybe sketch a to-do list. If you're already familiar with Github, which you will be after reading some books recommended in the next section, you can have one issue per item, or even take advantage of [Github's milestones feature](https://guides.github.com/features/issues/). You don't need to have a master plan for your whole package life, because one can hope your users will also influence the future features, and well you'll keep getting smarter as time goes by and the ideas will keep flowing. 
 
 If you want to work on your package as a team, make roles clear from the beginning, e.g. who will be the maintainer and keep others right on track... in particular if you start the project as a hackathon, who will make sure development goes forward once everyone goes home?
 
@@ -51,7 +51,7 @@ Last but not least in this planning phase, you should call your package somethin
 
 # How to build an R package
 
-Here I'll list useful resources to learn how to build an R package while respecting best practice. When googling a bit about R package development, I was surprised to see that although there is a ton of R packages out there, there aren't that many guides. Maybe we do not need more than CRAN official guide after all, and [Hadley Wickham's book](http://r-pkgs.had.co.nz/) is excellent, especially with the corresponding RStudio and `devtools` magic combo... but well diversity of resources is good too! 
+Here I'll list useful resources to learn how to build an R package while respecting best practice. When googling a bit about R package development, I was surprised to see that although there are a ton of R packages out there, there aren't that many guides. Maybe we do not need more than CRAN official guide after all, and [Hadley Wickham's book](http://r-pkgs.had.co.nz/) is excellent, especially with the corresponding RStudio and `devtools` magic combo... but well diversity of resources is good too! 
 
 I'd recommend your building packages in RStudio making the most of automatic tools like `devtools`. Note, in comparison to the content of Hadley's book, some automation is now [supported by `usethis`](https://www.tidyverse.org/articles/2017/11/usethis-1.0.0/).
 
@@ -59,7 +59,7 @@ Using these short and long form resources will help you increase the quality of 
 
 ## Short tutorials
 
-To learn the 101 of package building, check out [Hilary Parker's famous blog post *Writing an R package from scratch*](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/) that got many R package developpers started (I've for instance seen quite a few tweets of people celebrating their first R package and thanking Hilary!) or [this pictorial by Matthew J Denny](http://www.mjdenny.com/R_Package_Pictorial.html). How someone can be patient enough to do so many screenshots is beyond me but it's really great that he did!
+To learn the 101 of package building, check out [Hilary Parker's famous blog post *Writing an R package from scratch*](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/) that got many R package developers started (I've for instance seen quite a few tweets of people celebrating their first R package and thanking Hilary!) or [this pictorial by Matthew J Denny](http://www.mjdenny.com/R_Package_Pictorial.html). How someone can be patient enough to do so many screenshots is beyond me but it's really great that he did!
 
 ## Books
 
@@ -75,7 +75,7 @@ You can also look for in person training! Look up your local R user group or R-L
 
 ## More precise guidelines
 
-If you want to follow even more precise guidelines than the ones in the resources, check out [rOpenSci packaging guide](https://github.com/ropensci/onboarding/blob/master/packaging_guide.md). 
+If you want to follow even more precise guidelines than the ones in the resources, check out the [rOpenSci packaging guide](https://github.com/ropensci/onboarding/blob/master/packaging_guide.md). 
 
 # Where should your package live?
 
@@ -149,7 +149,7 @@ These two aspects are linked because your users will help you make your package 
 
 You know how your package works but the users don't (and future you might forget as well!). Document your parameters, functions, add examples, and also write [vignettes](http://r-pkgs.had.co.nz/vignettes.html). At least one vignette will show your users how the different functions of your package interact.
 
-At the beginning of this document I mentioned that when planning your package you should think about making it compatible with your users workflow. One of the vignette can be an example of just that. Otherwise, it'll be hard for users to see how useful your package is... and when writing the example workflow, you might find your package lacks some functionalities.
+At the beginning of this document I mentioned that when planning your package you should think about making it compatible with your users workflow. One of the vignettes can be an example of just that. Otherwise, it'll be hard for users to see how useful your package is... and when writing the example workflow, you might find your package lacks some functionality.
 
 Once you've written all these documentation parts, create a website for your package using [`pkgdown`](http://hadley.github.io/pkgdown/). [This tutorial](http://enpiar.com/2017/11/21/getting-down-with-pkgdown/) is excellent.
 
@@ -167,9 +167,9 @@ I'll give four tips here, partly inspired by [this essay by François Chollet](h
 
 ## Promotion 
 
-Now that you have a well-documented error-friendly package... how are your end users going to learn that it exists? Note that you should have a good idea of your potential users when planning your package (or at least part of them, who knows who else might find it useful?). One way to define good venues for promotion is to think of how *you* learn about R packages, but as an R developper you're probably more into R and R news than your future average user! For information you can also see the results of [Julia Silge's survey about how people discover packages](https://juliasilge.com/blog/package-search/) [here](https://app.doopoll.co/poll/FGZqTL7vpaaCgpWCM/live-results).
+Now that you have a well-documented error-friendly package... how are your end users going to learn that it exists? Note that you should have a good idea of your potential users when planning your package (or at least part of them, who knows who else might find it useful?). One way to define good venues for promotion is to think of how *you* learn about R packages, but as an R developer you're probably more into R and R news than your future average user! For information you can also see the results of [Julia Silge's survey about how people discover packages](https://juliasilge.com/blog/package-search/) [here](https://app.doopoll.co/poll/FGZqTL7vpaaCgpWCM/live-results).
 
-Obvious venues for promotion are social media, for instance Twitter with the #rstats hashtag in the form of a carefully crafted tweet including a link and a cool image like a figure or screenshot and maybe emojis, but that might not be enough for your niche package. If you write an ecology package and you have a well-recognized blog in that area blog about your package of course. You could also ask someone to let them you guest post on their well-recognized niche field blog. 
+Obvious venues for promotion are social media, for instance Twitter with the #rstats hashtag in the form of a carefully crafted tweet including a link and a cool image like a figure or screenshot and maybe emojis, but that might not be enough for your niche package. If you write an ecology package and you have a well-recognized blog in that area blog about your package of course. You could also ask someone to let you guest post on their well-recognized niche field blog. 
 
 If your package is an interface to an existing tool or internet resource, try to have your package listed on that tool or resource webpage.
 
@@ -179,7 +179,7 @@ As a scientist, you can write a paper about your package and publish it to a jou
 
 As a scientist you're used to having papers peer-reviewed. In general if you submit a paper about your package, your paper will be reviewed more than your package, but you can actually get the benefits of peer-review for your package itself! This is a fantastic way to improve the quality and user-friendliness of your package.
 
-Where to have your package review?
+Where to have your package reviewed?
 
 * You don't need anything formal, maybe you can ask someone you know and who could for instance be an user of your package? You can ask them to review the code or its documentation or both, depending on their skills and time of course.
 
@@ -189,11 +189,11 @@ Where to have your package review?
 
 * At [rOpenSci we review](https://www.numfocus.org/blog/how-ropensci-uses-code-review-to-promote-reproducible-science/) packages that fit in [our categories](https://github.com/ropensci/onboarding/blob/master/policies.md). Your package will be reviewed by two people. We have a partnership with the Journal of Open Source Software so that if your package fits in both venues, the review over at JOSS will be a breeze after the rOpenSci reviews. We also have a partnership with MEE, allowing a duo paper-package to be reviewed by MEE and rOpenSci respectively, see [this post](https://methodsblog.wordpress.com/2017/11/29/software-review/).
 
-Needless to say, but I'll write it anyway, all these review systems work both way... Offer your reviewing services! You'll actually learn so much that you'll find ideas to improve your own packages.
+Needless to say, but I'll write it anyway, all these review systems work both ways... Offer your reviewing services! You'll actually learn so much that you'll find ideas to improve your own packages.
 
 ## Make your repo a friendly place
 
-Another way to make your package higher quality and user friendlier is to make people at ease when they have a question, a bug report, or a suggestion for improvement. Adding a code of conduct (use `devtools::use_code_of_conduct` as a starting point) and a contributing guide (with issue and PR templates if you want, in any case making clear what kind of contributions you welcome) to your package repository will help ensuring that. Also try to respond timely to requests.
+Another way to improve the quality of your package and make it more user friendly is to put people at ease when they have a question, a bug report, or a suggestion for improvement. Adding a code of conduct (use `devtools::use_code_of_conduct` as a starting point) and a contributing guide (with issue and PR templates if you want, in any case making clear what kind of contributions you welcome) to your package repository will help ensuring that. Also try to respond timeously to requests.
 
 On top of having a contributing guide you could also add a [status badge](https://github.com/RMHogervorst/badgecreatr) for your repository so that any visitor might see at a glance whether your package is still in an early development stage.
 
