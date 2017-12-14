@@ -65,7 +65,3 @@ _Modelling and data analysis in wildlife epidemiology with the seal plague as a 
 <p style="clear: both;">
 </p>
 I like running and other sports that don't challenge my coordination too much. Running makes me red and happy.
-
-
-My [spouse](http://dacornu.github.io/) and I would define ourselves as feminists but somehow ended up taking (and enjoying!) salsa lessons here in Barcelona, which gives us very traditional roles. 
-
