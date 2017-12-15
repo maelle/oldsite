@@ -1,0 +1,159 @@
+---
+layout: post
+title: "Possum magic: mapping an Australian children's book"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+
+Our brand-new baby received a fantastic picture book as a gift: [Possum magic](https://en.wikipedia.org/wiki/Possum_Magic), a classic for Aussie kids. Thanks, [Miles](https://twitter.com/MilesMcBain)! In that book, Hush the possum and her Grandma Poss encounter different Australian animals and travel across well eat their way through the country. It is an adorable story with great illustrations! Reading it will make you feel like travelling to Australia, for instance to [useR! 2018](https://user2018.r-project.org/), except you shouldn't because it is a very scary country:
+
+<blockquote class="twitter-tweet" data-lang="ca"><p lang="en" dir="ltr">Rough night with 👶. ☕ was a good start but it was the balcony 🐍 capture and release that really 💓</p>&mdash; Miles McBain (@MilesMcBain) <a href="https://twitter.com/MilesMcBain/status/900887097631887360?ref_src=twsrc%5Etfw">25 d’agost de 2017</a></blockquote>
+
+
+However, you can travel and learn geography without leaving the comfort of a snake-free home... by mapping Hush's adventures! Which is what I decided to do.
+
+<!--more-->
+
+# Locating the animals, snake included 
+
+In the book, we first learn about how the magic of Grandma Poss affects some animals: wombats, kookaburras, dingoes and emus. We then read how Hush's invisibility (sorry, spoiler) makes her interact with koalas, kangaroos and snakes. We can imagine Hush and her grandmother live near these animals, in what is called "deep in the Australian bush". We'll map where all these animals live so that we can guess where Hush can live for the story to be credible. Moreover, given what Wikipedia says about [the bush](https://en.wikipedia.org/wiki/The_bush#Australia), Hush and her grandmother could live anywhere in Australia as long as it's not in a city, and since Hush's first city visit is in Adelaide, we can suppose she did not live too far away from there. Let's see!
+
+In order to map animals, we shall get occurrences from 2011 to 2016 via the rOpenSci  `spocc` package, with GBIF as a data source, and using the `scrubr` package for cleaning, like in [my blog post visualizing waxwings migration](http://www.masalmon.eu/2017/04/08/spocc/). When querying data via `spocc` one needs a bounding box, so I'll first load an Australian map from the [`eechidna` package](https://github.com/ropenscilabs/eechidna), product from the rOpenSci 2016 Oz unconf. I was inspired by the code in [this blog post](https://ropensci.org/blog/2017/11/21/ochre/) that's also a product from an Oz unconf.
+
+```{r}
+library("eechidna")
+library("ggthemes")
+library("ggplot2")
+data(nat_map_2016)
+```
+
+Let's just draw an empty map.
+
+```{r}
+ozmap <- ggplot() +
+                geom_map(aes(map_id=id), data=nat_map_2016,
+                         map=nat_map_2016) +
+                expand_limits(x=nat_map$long, y=nat_map$lat) +
+                theme_map()
+ozmap
+```
+
+And now, the bounding box!
+
+```{r}
+bbox <- c(min(nat_map$long), min(nat_map$lat), 
+          max(nat_map$long), max(nat_map$lat))
+```
+
+I'll make some assumptions about species and families since the book is not completely clear regarding which animals are meant exactly. Before pondering about this I had no idea there were three species of wombats! For wombats, I'm using the two possible families, for kookaburras, emus and kangaroos the whole family and for snake the [one mentioned in that scary thread](https://twitter.com/MilesMcBain/status/900957549951819776). For possums, I'm using a family of possums whose Wikipedia page did not indicate they were mostly urban.
+
+```{r}
+animals <- tibble::tibble(name = c("wombat", "wombat", "kookaburra", 
+                                   "dingo", "emu",
+                                   "koala", "kangaroo", 
+                                   "snake", "possum"),
+                          latin = c("Lasiorhinus", "Vombatus", "Dacelo",
+                                    "Canis lupus dingo", "Dromaius",
+                                    "Phascolarctos cinereus", "Macropus", 
+                                    "Morelia spilota", "Phalangeridae"))
+knitr::kable(animals)
+
+```
+
+Here is the function to get occurrences for one species or family.
+
+```{r}
+library("spocc")
+library("scrubr")
+library("magrittr")
+get_ozccurrences <- function(latin, year, bbox){
+  gbifopts <- list(year = year)
+  ozccurrences <- occ(query = latin,
+                      from = c('gbif'), 
+                      gbifopts = gbifopts,
+                      limit = 200000,
+                      geometry = bbox)
+  ozccurrences <- occ2df(ozccurrences)
+  ozccurrences <- ozccurrences %>%
+    coord_impossible() %>%
+    coord_incomplete() %>%
+    coord_unlikely() %>%
+    date_standardize("%Y-%m-%d") %>%
+    date_missing()
+  ozccurrences$latin <- latin
+  ozccurrences
+}
+
+```
+
+Let's test it on kookaburras, using the whole family.
+
+```{r}
+kookaburras <- get_ozccurrences("Dacelo", bbox = bbox)
+ozmap +
+  geom_point(data = kookaburras,
+             aes(longitude, latitude),
+             col = "salmon")
+```
+
+Note that occurrences might be misleading, since to get one you need one observer, so we'll probably get less occurrences when there are less humans without this meaning the density of the animal itself is lower. But since Hush's story is told by a human, we expect Hush to live in an area with at least a few observations of the different animals! Otherwise, how could the author know about all this stuff?
+
+
+```r
+all_ozcurrences <- purrr::map2_df(rep(animals$latin, 6), 
+                                 rep(2011:2016, nrow(animals)), 
+                                 get_ozccurrences,
+                                 bbox = bbox)
+all_ozcurrences <- dplyr::rename(all_ozcurrences, scientific_name = name)
+all_ozcurrences <- dplyr::left_join(all_ozcurrences, animals, by = "latin")
+readr::write_csv(all_ozcurrences, path = "data/2017-12-15-all_ozcurrences.csv")
+```
+
+```{r, echo=FALSE}
+all_ozcurrences <- readr::read_csv("data/2017-12-15-all_ozcurrences.csv")
+```
+
+```{r}
+ozmap +
+  geom_point(data = all_ozcurrences,
+             aes(longitude, latitude),
+             col = "salmon") +
+  facet_wrap(~name)
+```
+
+# Geocoding the cities
+
+The cities we need to geocode, and the food eaten by Hush and Grandma Poss while visiting them, are:
+
+```{r}
+cities <- tibble::tibble(city = c("Adelaide", "Melbourne",
+                                  "Sydney", "Brisbane",
+                                  "Darwin", "Perth",
+                                  "Hobart"),
+                         food = c("Anzac biscuit", "mornay and Minties",
+                                  "steak and salad", "pumpkin scones",
+                                  "vegemite", "pavlova", 
+                                  "lamington"))
+
+knitr::kable(cities)
+```
+
+We shall perfom geocoding using my own package [`opencage`](https://github.com/ropensci/opencage) which is a wrapper for R of the [OpenCage API](https://geocoder.opencagedata.com). This package was [reviewed by Julia Silge for rOpenSci](https://github.com/ropensci/onboarding/issues/36). 
+
+```{r}
+get_lozcation <- function(city){
+  opencage_results <- opencage::opencage_forward(placename = city,
+                                                 countrycode = "AU")
+} 
+
+
+```
+
+`r lala$results$annotations.flag`
+
