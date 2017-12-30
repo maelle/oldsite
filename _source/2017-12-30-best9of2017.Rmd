@@ -92,7 +92,7 @@ file.removes(paste0("col", 1:3, ".jpg"))
 
 ![](https://raw.githubusercontent.com/maelle/maelle.github.io/master/_source/2017-12-30-best9of2017.jpg)
 
-So, apart from fun blog posts, my top 9 tweets include a good `ggplot2` tip and above all, the birth of baby Émile! Why have I only included one heart emoji?
+So, apart from fun blog posts ([Where to live in the US](http://www.masalmon.eu/2017/11/16/wheretoliveus/), [Faces of #rstats Twitter](http://www.masalmon.eu/2017/03/19/facesofr/), [A plot against the CatterPlots complot](http://www.masalmon.eu/2017/02/18/complot/)) and more serious ones ([Automatic tools for improving R packages](http://www.masalmon.eu/2017/06/17/automatictools/), [How to develop good R packages (for open science)](http://www.masalmon.eu/2017/12/11/goodrpackages/), [Where have you been? Getting my Github activity](http://www.masalmon.eu/2017/12/21/wherehaveyoubeen/)), my top 9 tweets include a good `ggplot2` tip ([this website](http://www.ggplot2-exts.org/)) and above all, the birth of baby Émile! Why have I only included two heart emojis?
 
 # What about your 2017?
 
