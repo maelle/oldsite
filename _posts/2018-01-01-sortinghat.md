@@ -202,4 +202,4 @@ ggplot(houses) +
 
 ![plot of chunk unnamed-chunk-7](/figure/source/2018-01-01-sortinghat/unnamed-chunk-7-1.png)
 
-Oh, what a non-intuitive result!  But maybe this means that the R community is very social on Twitter; or my sample is too small? In any case, I guess this is good news if the R Slytherin sample contain [parselmouths](http://harrypotter.wikia.com/wiki/Parseltongue): quite a few useRs should then be able to talk to all the terrifying Australian snakes they'll meet in Brisbane during useR! 2018.
+Oh, what a non-intuitive result!  But maybe this means that the R community is very social on Twitter; or my sample is too small? In any case, I guess this is good news if the R Slytherin sample contain [parsselmouths](http://harrypotter.wikia.com/wiki/Parseltongue): quite a few useRs should then be able to talk to all the terrifying Australian snakes they'll meet in Brisbane during useR! 2018.
