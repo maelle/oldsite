@@ -3,12 +3,7 @@ layout: post
 title: "Are #python users more likely to get into Slytherin?"
 comments: true
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      message = FALSE,
-                      warning = FALSE, 
-                      cache = TRUE) 
-```
+
 
 _This post requires some familiarity with the Harry Potter books but I'm committed to making this blog friendly to everyone, even Muggles/Nomajes._
 
@@ -53,20 +48,25 @@ users <- dplyr::group_by(users, screen_name) %>%
   dplyr::filter(!duplicate_user)
 ```
 
-```{r, echo = FALSE}
-library("magrittr")
-users <- readr::read_csv("data/2018-01-01-sortinghat-users.csv")
-```
+
 
 Here is the number of accounts I got:
 
-```{r}
+
+```r
 users %>%
   dplyr::group_by(language) %>%
   dplyr::summarise(n = n()) %>%
   knitr::kable()
-
 ```
+
+
+
+|language   |   n|
+|:----------|---:|
+|javascript | 258|
+|python     | 126|
+|rstats     | 128|
 
 I had actually overestimated the amount of overlap between accounts. Well this does not mean any of these accounts is exclusively related to one of the languages, I have for instance seen `rtweet` creator [Mike Kearney](https://twitter.com/kearneymw) himself tweet about Python and he's still in my R sample. It's because the rank in Twitter Python set might be different than the Twitter R rank, but I'll go on and assume that if an account was returned for R rather than Python, then it's not a bad representant of R. 
 
@@ -107,14 +107,12 @@ get_scores <- function(screen_name){
 scores <- purrr::map_df(users$screen_name, get_scores)
 
 ```
-```{r, echo = FALSE}
 
-scores <- readr::read_csv("data/2018-01-01-sortinghat-scores.csv")
-```
 
 Let's have a look at the distribution of scores in the different populations.
 
-```{r}
+
+```r
 library("ggplot2")
 users <- dplyr::select(users, screen_name, language)
 scores <- dplyr::left_join(scores, users, by = "screen_name")
@@ -123,8 +121,9 @@ scores %>%
 ggplot() +
   geom_density(aes(metric)) +
   facet_grid(language ~ house)
-
 ```
+
+![plot of chunk unnamed-chunk-4](/figure/source/2018-01-01-sortinghat/unnamed-chunk-4-1.png)
 
 The graph above gives an idea of what the results will look like...
 
@@ -134,7 +133,8 @@ For each R or Python account, the sorting hat as written by David Hood will comp
 
 I think copy pasting the same code for all houses was the quickest method for David Hood which is fine but I decided I'd re-format the code a little bit to 1) avoid repetitions, 2) getting acquainted with tidy eval (I know, I know, I'm really late) with [Omayma's blog post](http://www.onceupondata.com/2017/08/12/my-first-steps-into-the-world-of-tidyeval/) as a guide. I also browsed [this issue](https://github.com/tidyverse/dplyr/issues/2944) to find an example of the correct syntax for `arrange`. I clearly need more practice, which I intend to get this year, using [Edwin Thoen's reference](https://edwinth.github.io/blog/dplyr-recipes/) among other things.
 
-```{r}
+
+```r
 library("rlang")
 compare_with <- dplyr::filter(scores, language == "javascript")
 compare_with$isSortee <- FALSE
@@ -180,19 +180,16 @@ houses <- candidates %>%
   purrr::map_df(sort_user, compare_with = compare_with)
 
 readr::write_csv(houses, path = "data/2018-01-01-sortinghat-houses.csv")
-
 ```
 
 # Answering the question
 
 So now has come the crucial moment of truth... Are Python users more likely to get sorted into Slytherin? I'll leave statistical tests as an exercise to the reader and just produce a visualization.
 
-```{r, echo = FALSE}
 
-scores <- readr::read_csv("data/2018-01-01-sortinghat-houses.csv")
-```
 
-```{r}
+
+```r
 library("hrbrthemes")
 
 ggplot(houses) +
@@ -201,7 +198,8 @@ ggplot(houses) +
   theme_ipsum(base_size = 20,
               axis_title_size = 12) +
   viridis::scale_fill_viridis(discrete = TRUE)
-
 ```
+
+![plot of chunk unnamed-chunk-7](/figure/source/2018-01-01-sortinghat/unnamed-chunk-7-1.png)
 
 Oh, what a non-intuitive result!  But maybe this means that the R community is very social on Twitter; or my sample is too small? In any case, I guess this is good news if the R Slytherin sample contain [parselmouths](http://harrypotter.wikia.com/wiki/Parseltongue): quite a few useRs should then be able to talk to all the terrifying Australian snakes they'll meet in Brisbane during useR! 2018.

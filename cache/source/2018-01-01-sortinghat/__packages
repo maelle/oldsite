@@ -1,0 +1,6 @@
+base
+magrittr
+ggplot2
+rlang
+bindrcpp
+hrbrthemes
