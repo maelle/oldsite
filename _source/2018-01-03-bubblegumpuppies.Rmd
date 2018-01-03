@@ -1,0 +1,128 @@
+---
+layout: post
+title: "Cheer up, Black Metal Cats! Bubblegum Puppies"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE) 
+```
+
+Do you know the [Black Metal Cats Twitter account](https://twitter.com/evilbmcats)? As explained [in this great introduction](https://nerdist.com/cats-twitter-heavy-metal-lyrics/), it "combines kitties with heavy metal lyrics". I know the account because I follow [Scott Chamberlain](https://twitter.com/sckottie) who retweets them a lot, which I enjoy as far as one can enjoy such a dark mood. Speaking of which, I decided to try and transform Black Metal Cat tweets into something more positive... The Bubblegum Puppies were born!
+
+<!--more-->
+
+# Getting Black Metal Cats tweets
+
+It won't come as a surprise for the loyal readers of this blog that I just had to use `rtweet`. I kept only original standalone tweets and removed the picture link from the tweet.
+
+```r
+black_tweets <- rtweet::get_timeline("evilbmcats")
+black_tweets <- dplyr::filter(black_tweets, is.na(reply_to_user_id), !is_retweet, !is_quote)
+black_tweets <- dplyr::select(black_tweets, text, created_at, status_id)
+black_tweets <- dplyr::mutate(black_tweets, text = stringr::str_replace(text, "https.*", ""))
+readr::write_csv(black_tweets, path = "data/2018-01-03-bubblegumpuppies_cats.csv")
+```
+
+```{r, echo = FALSE}
+black_tweets <- readr::read_csv("data/2018-01-03-bubblegumpuppies_cats.csv")
+
+```
+
+Now that the dark material is ready, let's sweeten it...
+
+# Modifying the tweet text
+
+Black Metal Cats tweet heavy metal lyrics so as you can imagine, they're sad. How to make them happy while keeping the text similar enough to the original one? And this without too much effort? My simplistic strategy was to identify negative words via sentiment analysis and to replace them with positive words. 
+
+_Note, had I not wanted to stay close to the original tweet, I could have just chosen lyrics picked from [this dataset](https://www.rdocumentation.org/packages/billboard/versions/0.1.0/topics/lyrics) for instance, and filtered them by sentiment via the sentimentr package._
+
+## Finding negative words
+
+I computed sentiment using `tidytext` copy-pasting code from [this post of mine](http://www.masalmon.eu/2017/10/02/guardian-experience/).
+
+```{r}
+library("tidytext")
+library("magrittr")
+bing <- get_sentiments("bing")
+
+sentiment <- dplyr::select(black_tweets, text) %>%
+  dplyr::mutate(saved_text = text) %>%
+  unnest_tokens(word, text) %>%
+  dplyr::inner_join(bing, by = "word") %>%
+  dplyr::filter(sentiment == "negative")
+
+``` 
+
+It was a bit disappointing since out of the `r nrow(black_tweets)` only `r length(unique(sentiment$saved_text))` were represented in that data.frame. But well, this shall do! I just looked rapidly at some non included tweets.
+
+
+```{r}
+dplyr::filter(black_tweets, !text %in% sentiment$saved_text) %>%
+  head() %>%
+  knitr::kable()
+
+```
+
+Ok so some of them are probably negative tweets that the [`sentimentr` package](https://cran.r-project.org/web/packages/sentimentr/README.html) would help detect but that do not contain negative words.
+
+## Replacing words
+
+I seriously considered using the [`wordnet` package](https://cran.r-project.org/web/packages/wordnet/index.html) because of this [Stack Overflow question "Getting antonyms using the `wordnet` package"](https://stackoverflow.com/questions/19360107/getting-antonyms-using-the-r-wordnet-package) but I was not brave enough, my strength failed me in front of the Java needs of that package. 
+
+I decided to use `praise` to get positive words, and `cleanNLP` (as in [this post](http://www.masalmon.eu/2017/12/05/badderb/)) to try and identify correctly negative words as adjective or verbs for instance in order to be able to replace them. The right annotation for that is a _token_. 
+
+
+```{r}
+library("cleanNLP")
+init_spaCy()
+
+get_token_with_text <- function(x){
+  obj <- run_annotators(x, as_strings = TRUE)
+  entities <- get_token(obj)
+  entities$text <- x
+  entities
+}
+
+possibly_get_tokens <- purrr::possibly(get_token_with_text,
+                                         otherwise = NULL)
+
+tokens <- purrr::map_df(sentiment$saved_text, possibly_get_tokens)
+head(tokens) %>%
+  knitr::kable()
+```
+
+Once here, I joined sentiment and tokens.
+
+```{r}
+tokens <- dplyr::mutate(tokens, word = enc2native(word))
+tokens <- dplyr::mutate(tokens, word = tolower(word))
+tokens <- dplyr::left_join(sentiment, tokens, by = c("saved_text" = "text", "word"))
+head(tokens) %>% knitr::kable()
+```
+
+The `praise` package provides adjectives that I'll use to replace adjectives and some verb forms. Nouns, present and preterit verbs will be replaced with love/loves/loved because hey, this is pop music inspiration. I'll lose capital letters and won't bother too much, puppies probably do not care either.
+
+```{r}
+modifiers <- tibble::tibble(pos = c( "NN",  "VBG", "JJ", 
+                                     "VBD", "VB",  "NNS", 
+                                     "VBP", "VBN", "NNP", "VBZ"),
+                            modifier = c("love", "${adjective}", "${adjective}",
+                                         "loved", "love", "lovers",
+                                         "love", "${adjective}",
+                                         "love", "loves"))
+knitr::kable(modifiers)
+
+```
+
+
+# Modifying the picture
+
+
+
+
+I recently discovered Pexels, a website with CC-0 pictures, that I even learnt to scrape for an unpublished (yet) project. So many photographs you can use and modify for free without any attribution! Quite cool, really. When I searched for kittens, I saw pics that looked like Black Metal cats though, and I did not want to have to sort pics by hand... so I chose to get pics of puppies!
+
+# Putting tweets side by side
