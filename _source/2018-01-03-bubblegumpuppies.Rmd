@@ -117,6 +117,29 @@ knitr::kable(modifiers)
 
 ```
 
+Now let's get to work on the sweetening of the texts at last!
+
+```{r}
+# praise has some randomness, let's make it reproducible
+set.seed(42)
+
+modifiable_tweets <- dplyr::left_join(tokens, black_tweets, 
+                                      by = c("saved_text" = "text"))
+
+modifiable_tweets <- dplyr::left_join(modifiable_tweets, modifiers, 
+                                      by = "pos")
+
+# for easier use with map
+replace_all <- function(pattern, replacement, x){
+  stringr::str_replace_all(x, pattern = pattern,
+                           replacement = replacement)
+}
+
+modifiable_tweets <- dplyr::group_by(modifiable_tweets, saved_text) %>%
+  dplyr::summarize(praise_template = unlist(purrr::map2(word, modifier, replace_all,
+                                                  x = saved_text))[1])
+```
+
 
 # Modifying the picture
 
