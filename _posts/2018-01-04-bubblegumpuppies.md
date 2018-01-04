@@ -83,7 +83,7 @@ I decided to use `praise` to get positive words, and `cleanNLP` (as in [this pos
 
 ```r
 library("cleanNLP")
-#init_spaCy()
+init_spaCy()
 
 get_token_with_text <- function(x){
   obj <- run_annotators(x, as_strings = TRUE)
@@ -102,10 +102,14 @@ head(tokens) %>%
 
 
 
-||
-||
-||
-||
+| id| sid| tid|word      |lemma    |upos |pos | cid|text                           |
+|--:|---:|---:|:---------|:--------|:----|:---|---:|:------------------------------|
+|  1|   1|   1|We        |-PRON-   |PRON |PRP |   0|We are the creatures you fear. |
+|  1|   1|   2|are       |be       |VERB |VBP |   3|We are the creatures you fear. |
+|  1|   1|   3|the       |the      |DET  |DT  |   7|We are the creatures you fear. |
+|  1|   1|   4|creatures |creature |NOUN |NNS |  11|We are the creatures you fear. |
+|  1|   1|   5|you       |-PRON-   |PRON |PRP |  21|We are the creatures you fear. |
+|  1|   1|   6|fear      |fear     |VERB |VBP |  25|We are the creatures you fear. |
 
 Once here, I joined sentiment and tokens.
 
@@ -205,7 +209,7 @@ head(puppies_and_cats) %>% knitr::kable()
 
 So although some new lyrics do not look that cheerful, they're at least grammatically correct.
 
-# Modifying the picture
+# Replacing the picture
 
 I recently discovered [Pexels](https://www.pexels.com/), a website with CC-0 pictures, that I even learnt to scrape for an unpublished (yet) project. So many photographs you can use and modify for free without any attribution! Quite cool, really. To scrape the page I first had to scroll down to get enough pictures, which I did following [this Stack Overflow thread](https://stackoverflow.com/questions/29861117/r-rvest-scraping-a-dynamic-ecommerce-page) with `RSelenium`. I tried using `seleniumPipes` instead but had trouble setting up the server and not too much time to dwell on that. 
 
