@@ -10,9 +10,13 @@ knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE) 
 ```
 
+<<<<<<< HEAD
 I've now down a few collages from R using `magick`: [the faces of #rstats Twitter](http://www.masalmon.eu/2017/03/19/facesofr/), [We R-Ladies](http://livefreeordichotomize.com/2017/07/18/the-making-of-we-r-ladies/) with Lucy D'Agostino McGowan, and [a holiday card for R-Ladies](https://github.com/rladies/rladies_holidays). The faces of #rstats Twitter and holiday card collages were arranged at random, while the We R-Ladies one was a mosaic forming the R-Ladies logo. I got the idea to up my collage skills by trying to learn how to arrange pics by their main colour, like a rainbow. 
 
 It was the occasion to grab some useful knowledge about colours, not useless for someone who did not even know about [Pantone's Colors of the Year](https://en.wikipedia.org/wiki/Pantone#Color_of_the_Year) a few weeks ago...
+=======
+I've now down a few collages from R using `magick`: [the faces of #rstats Twitter](http://www.masalmon.eu/2017/03/19/facesofr/), [We R-Ladies](http://livefreeordichotomize.com/2017/07/18/the-making-of-we-r-ladies/) with Lucy D'Agostino McGowan, and [a holiday card for R-Ladies](https://github.com/rladies/rladies_holidays). The faces of #rstats Twitter and holiday card collages were arranged at random, while the We R-Ladies one was a mosaic forming the R-Ladies logo. I got the idea to up my collage skills by trying to learn how to arrange pics by their main colour. It was the occasion to grab some useful knowledge about colours, not useless for someone who did not even know about [Pantone's Colors of the Year](https://en.wikipedia.org/wiki/Pantone#Color_of_the_Year) a few weeks ago...
+
 
 _This post has nothing to do with Kesha's new album. However, you can listen to it while reading since it's so good, but maybe switch to something older from her when I use "$"._
 
@@ -79,11 +83,18 @@ purrr::walk(links, save_pic)
 
 ```
 
+
 # Extracting the main colour and making pics size-compatible
 
 In the following code, I extracted the main colour from each pic using [Russel Dinnage's method](http://www.mepheoscience.com/colourful-ecology-part-1-extracting-colours-from-an-image-and-selecting-them-using-community-phylogenetics-theory/) as presented [in this blog post from David Smith](http://blog.revolutionanalytics.com/2015/03/color-extraction-with-r.html). Before that I had to install two packages from Github, [`rblocks`](https://github.com/ramnathv/rblocks) and [`rPlotter`](https://github.com/woobe/rPlotter). 
 
 This code also serves another role: since I wanted to paste pics together at some point, I decided to make them all of the same dimensions by adding a border with `magick`. I had learnt how to do that when preparing [R-Ladies Global holiday card](https://github.com/rladies/rladies_holidays), but this time instead of using the same colour every time (R-Ladies' official purple), I used the main colour I'd just extracted. The most important points to make a picture a square are to know `magick::image_info` gives you the height and width of an image... and to somehow understand geometry which was embarrassingly a hurdle when I did that.
+=======
+# Extracting the main colour and making pics compatible
+
+In the following code, I extracted the main colour from each pic using [Russel Dinnage's method](http://www.mepheoscience.com/colourful-ecology-part-1-extracting-colours-from-an-image-and-selecting-them-using-community-phylogenetics-theory/) as presented [in this blog post from David Smith](http://blog.revolutionanalytics.com/2015/03/color-extraction-with-r.html). Before that I had to install two packages from Github, [`rblocks`](https://github.com/ramnathv/rblocks) and [`rPlotter`](https://github.com/woobe/rPlotter). 
+
+This code also serves another role: since I wanted to paste pics together at some point, I decided to make them all the same size by adding a border with `magick`. I had learnt how to do that when preparing [R-Ladies Global holiday card](https://github.com/rladies/rladies_holidays), but this time instead of using the same colour every time (R-Ladies' official purple), I used the main colour I'd just extracted. The most important points to make a picture a square are to know `magick::image_info` gives you the height and width of an image... and to somehow understand geometry which was embarrassingly a hurdle when I did that.
 
 The code to extract colours didn't work in a few cases which I did not investigate a lot: I had downloaded more pics than what I needed because I had experienced the issue when working with R-Ladies meetups pics, and had seen it was because of seemingly bicolor pics.
 
@@ -157,6 +168,7 @@ purrr::walk(dir("formatted_pics", full.names = TRUE),
 This function has a collage part which you might recognize from my [the faces of #rstats Twitter](http://www.masalmon.eu/2017/03/19/facesofr/) blog post, and a ordering pictures according to a variable part that's new and uses a bit of tidy eval...  Maybe I'll really learn tidy eval this year! `pics_info` needs to be a data.frame with the path to pictures and well the variable one wants to use to order them.
 
 ```r
+
 library("rlang")
 
 make_column <- function(i, files, no_rows){
@@ -196,6 +208,7 @@ make_collage <- function(pics_info, no_rows, no_cols, ordering_col){
 
 Once I had the main colour as an hex code, I had no idea how to order the colours and thought a good idea would be to use hue, which is the main wave length in a colour. Most observed colours are a mix of wave lengths unless you're using a laser for instance. To get hue from a colour identified by its hex code, one needs two functions: `colorspace::hex2rgb` and `grDevices::rgb2hsv`. The latter one outputs hue, saturation and value. Hue is the main wavelength, saturation the amount of that wavelength in the colour and value the amount of light in the colour. The smaller the saturation, the less representative the hue is of the main colour. Add to that the fact that the main colour can also be only a little representative of your original picture... Ordering by hue isn't too perfect, but I tried that anyway. 
 
+<<<<<<< HEAD
 ```r
 # now work on getting the hue and value for all pics
 # create a data.frame with path, hue, value 
@@ -229,7 +242,7 @@ make_collage(pics_info, 19, 59, "hue") %>%
 ```
 ![](https://raw.githubusercontent.com/maelle/maelle.github.io/master/_source/data/2018-01-06-rainbowing-banner_hue.png)
 
-So this is not too pretty. Blue and green pictures seem to cluster together but there are very dar
+So this is not too pretty. Blue and green pictures seem to cluster together but there are very dark pictures which we'd intuitively put aside.
 
 
 https://blog.algolia.com/how-we-handled-color-identification/
