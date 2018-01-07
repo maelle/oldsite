@@ -3,12 +3,7 @@ layout: post
 title: "Rainbowing a set of pictures"
 comments: true
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      message = FALSE,
-                      warning = FALSE, 
-                      cache = TRUE) 
-```
+
 
 I've now down a few collages from R using `magick`: [the faces of #rstats Twitter](http://www.masalmon.eu/2017/03/19/facesofr/), [We R-Ladies](http://livefreeordichotomize.com/2017/07/18/the-making-of-we-r-ladies/) with Lucy D'Agostino McGowan, and [a holiday card for R-Ladies](https://github.com/rladies/rladies_holidays). The faces of #rstats Twitter and holiday card collages were arranged at random, while the We R-Ladies one was a mosaic forming the R-Ladies logo. I got the idea to up my collage skills by trying to learn how to arrange pics by their main colour, like a rainbow. The verb rainbow doesn't exist, and ["rainbowing"](https://en.wikipedia.org/wiki/Rainbowing) doesn't mean ordering by colour, but I didn't let this stop me.
 
