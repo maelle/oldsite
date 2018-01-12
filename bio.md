@@ -5,7 +5,7 @@ title: Bio
 
 ## Professional experience
 
-* I am currently looking for a remote data scientist/research software engineer position starting in January 2018 after my maternity leave. Don't hesitate to contact me! 
+* Oct 2017 - January 2018: I am currently on maternity leave.
 
 * Oct 2015 - Oct 2017: __Statistician and data manager__, ISGlobal, Center for Research in Environmental Epidemiology (CREAL), Barcelona (Spain). I worked for the [CHAI project](http://www.chaiproject.org/). CHAI means _Cardiovascular Health Effects of Air Pollution in Telangana, India_.
 
