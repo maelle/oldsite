@@ -3,12 +3,7 @@ layout: post
 title: "Galentine's day cards"
 comments: true
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      message = FALSE,
-                      warning = FALSE, 
-                      cache = TRUE, eval = FALSE) 
-```
+
 
 Remember the [nascent series of blog posts about Parks and recreation](http://www.masalmon.eu/2017/11/05/newborn-serie/)? Well, we're still at one post, but don't worry, here is a new one, and I'm sure the series will eventually be a real one. I'm looking at you, my R-Ladies friends. That said, today is not a day for passive agressive hints, because I've decided it's [Galentine's day](https://en.wikipedia.org/wiki/Galentine%27s_Day) and I'll show you how to craft cards for your R-Ladies friends from your R prompt!
 
@@ -21,7 +16,8 @@ Galentine's day is a celebration Leslie Knope throws every year for her female f
 
 Here I need animal names and praising adjectives for a pretty frivolous use case. Now sometimes you could want to randomly draw words to make identifiers for, say, participants in your epidemiological study because that'd be easier to deal with than numbers. The [`ids` package](https://github.com/richfitz/ids) actually provides human readable identifiers in the style `<adjective>_<animal>` (following [gfycat.com](https://gfycat.com/)) but sadly that adjective wouldn't necessary be positive, so I'll use the [`praise` package](https://github.com/rladies/praise) to get adjectives and the [`rcorpora` package](https://github.com/gaborcsardi/rcorpora) to get animal names. I'll set the [random seed](http://www.masalmon.eu/2017/04/12/seeds/) to ensure reproducibility, not forgetting to be careful about [where to generate it](http://livefreeordichotomize.com/2018/01/22/a-set-seed-ggplot2-adventure/).
 
-```{r}
+
+```r
 set.seed(123)
 
 compliment <- function(name, animal){
@@ -31,7 +27,6 @@ compliment <- function(name, animal){
 compliments <- tibble::tibble(name = c("Ann", "April", "Donna", "Shauna"),
                               animal = sample(rcorpora::corpora(which = "animals/common")$animals, size = 4),
                               compliment = purrr::map2_chr(name, animal, compliment))
-
 ```
 
 
@@ -39,17 +34,18 @@ compliments <- tibble::tibble(name = c("Ann", "April", "Donna", "Shauna"),
 
 I first thought I could use cute animal pics for the cards, my husband even suggested I use the animal from the compliment which I could have done using Pexels as in my [bubblegum puppies post](http://www.masalmon.eu/2018/01/04/bubblegumpuppies/) or my [rainbowing post](http://www.masalmon.eu/2018/01/07/rainbowing/), using the [gist posted by Bob Rudis to avoid using `RSelenium`](https://gist.github.com/hrbrmstr/4cabe4af87bd2c5fe664b0b44a574366), but I decided to go a simpler route (which I'll call [using Kasia's strategy to get stuff done](https://kkulma.github.io/2017-12-29-end-of-year-thoughts/)), generating random colours, and putting text on a single-colour background. Let's assume Leslie Knope would have written a poem on the other side, which you could do using [Katie Jolly's approach](http://katiejolly.io/blog/2018-01-05/random-rupi-markov-chain-poems). Anyway, how did I generate random colours? Well, using `charlatan`! Really, a quite useful package by Scott Chamberlain, peer-reviewed by Brooke Anderson and TJ Mahr at [rOpenSci onboarding repo](https://github.com/ropensci/onboarding/issues/94).
 
-```{r}
+
+```r
 set.seed(123)
 compliments <- dplyr::mutate(compliments, 
                              background = charlatan::ch_hex_color(n = 4), 
                              text_colour = charlatan::ch_hex_color(n = 4))
-
 ```
 
 And then I could use [`magick`](https://github.com/ropensci/magick)! I've convinced myself that although I use `magick` for non serious stuff, I could use these skills on scientific image data one day. Note that I could have packed the whole code of the post in a single function, but I wanted to progressively build the card (compliments, then colours, then the image).
 
-```{r}
+
+```r
 library("magrittr")
 
 create_card <- function(who, compliments){
