@@ -1,0 +1,88 @@
+---
+layout: post
+title: "hrbrpkgs: list Bob Rudis' packages"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE, eval = TRUE) 
+```
+
+Recently I needed to count lines of code for a project at work work (this is an expression of the person honored in this post), and happened to discover that Bob Rudis had started [an R package](https://github.com/hrbrmstr/cloc) wrapping the [Perl CLOC script](https://github.com/AlDanial/cloc). Of course! He has packages for a lot of things! And he's always ready to help: after I asked him a question about the package, and made a pull request to renew its wrapped CLOC script, he made it all pretty and ready-to-go!
+
+He himself defined his Stack Overflow Driven-Development (SODD) workflow [in a blog post](https://rud.is/b/2017/09/28/sodd-stackoverflow-driven-development/): someone will ask him a question on Stack Overflow, and he'll write a long answer eventually becoming a package, that will or will not make it to CRAN... Which is the motivation of this blog post. How can I output a list of all packages Bob has on GitHub?
+
+<!--more-->
+
+# The magic of GitHub API V4, `ghql` and jq/`jqr`
+
+I've recently started using GitHub API V4 instead of V3, that you might have seen on this blog in [my post about random seeds](http://www.masalmon.eu/2017/04/12/seeds/) and [my post about initial commit messages](http://www.masalmon.eu/2017/02/21/firstcommit/). I'll probably introduce my workflow more formally and extensively elsewhere but here are a few appetizers:
+
+* Find out [why GitHub is using GraphQL](https://developer.github.com/v4/#why-is-github-using-graphql). I was particularly receptive to the idea of getting _just_ the data I needed from the API.
+
+* rOpenSci has a very good general purpose GraphQL R client, [`ghql`](https://github.com/ropensci/ghql) by Scott Chamberlain, that includes R6 classes of course (being a package of Scott's) and whose doc examples are for... GitHub API V4! 
+
+* One can build queries in [GitHub V4 explorer](https://developer.github.com/v4/explorer/) that has auto-completion and the docs on the right so it made, and still makes, things easier for me as a GraphQL n00b.
+
+* One can wrangle JSON using jq via the rOpenSci [`jqr` package](https://github.com/ropensci/jqr) which is a real gem. Carl Boettiger wrote about it [here](http://www.carlboettiger.info/2017/12/11/data-rectangling-with-jq/), I trusted him and gave it a try and my mind was blown. Now I do not find the syntax intuitive but guess what, there's [an explorer](https://jqplay.org/) for that too! So I could `writeClipboard` JSON output from the API and use the explorer to write code.
+
+The results of my recent discoveries, and my using the API for work work stuff, can be found in my very nascent/work-in-progress [`ghrecipes` package](https://github.com/maelle/ghrecipes). By the way if you're after something similar i.e. high-level, but for GitHub API V3, check [`ghapi`](https://github.com/coatless/ghapi) out.
+
+# Using my own GitHub package
+
+I first retrieved all packages of Bob's. My `ghrecipes` package iterates for you thanks to a piece of code by Scott Chamberlain.
+
+_You'll note some things could be made easier if the output of my own functions was a bit different so you can imagine that yes, I'll break my own package from time to time, but at least this all gives a taste of what can be done._
+
+```{r}
+library("magrittr")
+repos <- ghrecipes::get_repos("hrbrmstr")
+repos <- tidyr::separate(repos, name, into = c("owner", "repo"),
+                         remove = FALSE, sep = "/")
+# remove forks
+repos <- dplyr::filter(repos, !is_fork)
+```
+
+I found `r nrow(repos)` repos.
+
+```{r}
+head(repos) %>%
+  knitr::kable()
+
+```
+
+Now as you see I'm nearly done since my own function returns the GitHub description of the repo (I had forgotten about that when starting to write this post!), but I only want _packages_. Fear not, I already have a recipe for this as well, [`is_package_repo`](https://github.com/maelle/ghrecipes/blob/master/R/is_package.R)! It looks whether a repo contains man, R, DESCRIPTION and NAMESPACE. Now I'm pretty sure the code below could be hugely simplified, but I'm in a hurry.
+
+```{r, message = FALSE}
+is_pkg <- function(df){
+  message(df$name)
+  tibble::tibble(owner = df$owner,
+                 repo = df$repo,
+                 is_pkg = ghrecipes::is_package_repo(owner, repo))
+}
+
+are_pkgs <- split(repos, repos$name) %>%
+  purrr::map_df(is_pkg)
+
+are_pkgs <- dplyr::left_join(repos, are_pkgs, by = c("owner", "repo"))
+hrbrpkgs <- dplyr::filter(are_pkgs, is_pkg)
+```
+
+I found `r nrow(hrbrpkgs)` packages whose whole table I'll put at the very end of this post. I can't wait to browse it!
+
+# The end?
+
+What can _you_ do with this list? Explore it to find the package you didn't know you needed, or the package you'd like to contribute to, because I can recommend contributing to Bob's packages, and he encourages people to!
+
+<blockquote class="twitter-tweet" data-lang="ca"><p lang="en" dir="ltr">I’ve got a GH full of diverse <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> 📦 repos that all need tweaks/enhancements ranging from docs to ƒ()s. I’ll gladly help anyone — esp new PRers — contribute.</p>&mdash; hrbr&#39;Challa (@hrbrmstr) <a href="https://twitter.com/hrbrmstr/status/952162899472146432?ref_src=twsrc%5Etfw">13 de gener de 2018</a></blockquote>
+
+And as promised here is the table!
+
+```{r}
+hrbrpkgs %>%
+  dplyr::select(repo, description, created_at, updated_at) %>%
+  dplyr::arrange(repo) %>%
+  DT::datatable()
+```
