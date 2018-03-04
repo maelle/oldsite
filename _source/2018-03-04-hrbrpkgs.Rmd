@@ -32,9 +32,11 @@ The results of my recent discoveries, and my using the API for work work stuff, 
 
 # Using my own GitHub package
 
-I first retrieved all packages of Bob's. My `ghrecipes` package iterates for you thanks to a piece of code by Scott Chamberlain.
+I first retrieved all GitHub repositories of Bob's. My `ghrecipes` package iterates for you thanks to a piece of code by Scott Chamberlain.
 
-_You'll note some things could be made easier if the output of my own functions was a bit different so you can imagine that yes, I'll break my own package from time to time, but at least this all gives a taste of what can be done._
+_You'll note some things could be made easier if the output of my own functions was a bit different so you can imagine that yes, I'll break my own package from time to time, but at least this gives a taste of what can be done._
+
+You can read the code of my `ghrecipes::get_repos` function [on GitHub](https://github.com/maelle/ghrecipes/blob/master/R/get_repos.R).
 
 ```{r}
 library("magrittr")
@@ -53,7 +55,7 @@ head(repos) %>%
 
 ```
 
-Now as you see I'm nearly done since my own function returns the GitHub description of the repo (I had forgotten about that when starting to write this post!), but I only want _packages_. Fear not, I already have a recipe for this as well, [`is_package_repo`](https://github.com/maelle/ghrecipes/blob/master/R/is_package.R)! It looks whether a repo contains man, R, DESCRIPTION and NAMESPACE. Now I'm pretty sure the code below could be hugely simplified, but I'm in a hurry.
+Now as you see I'm nearly done since my own function returns the GitHub description of the repo (I had forgotten about that when starting to write this post!) and since Bob seems to often write a description for his repos which we should all do; but I only want _packages_. Fear not, I already have a recipe for this as well, [`is_package_repo`](https://github.com/maelle/ghrecipes/blob/master/R/is_package.R)! It looks whether a repo contains man, R, DESCRIPTION and NAMESPACE. Now I'm pretty sure the code below could be hugely simplified, but I'm in a hurry.
 
 ```{r, message = FALSE}
 is_pkg <- function(df){
@@ -74,15 +76,23 @@ I found `r nrow(hrbrpkgs)` packages whose whole table I'll put at the very end o
 
 # The end?
 
-What can _you_ do with this list? Explore it to find the package you didn't know you needed, or the package you'd like to contribute to, because I can recommend contributing to Bob's packages, and he encourages people to!
+What can _you_ do with this list? Explore it to find the package(s) you didn't know you needed, or the package(s) you'd like to contribute to, because I can recommend contributing to Bob's packages, and he encourages people to!
 
 <blockquote class="twitter-tweet" data-lang="ca"><p lang="en" dir="ltr">I’ve got a GH full of diverse <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> 📦 repos that all need tweaks/enhancements ranging from docs to ƒ()s. I’ll gladly help anyone — esp new PRers — contribute.</p>&mdash; hrbr&#39;Challa (@hrbrmstr) <a href="https://twitter.com/hrbrmstr/status/952162899472146432?ref_src=twsrc%5Etfw">13 de gener de 2018</a></blockquote>
 
-And as promised here is the table!
+And as promised here is the table! I can have fancy `DT` tables on my blog thanks to the help of a [power](https://d4tagirl.com/) [couple](https://g3rv4.com/) from Montevideo, as explained in [the other post where I used that](http://www.masalmon.eu/2017/06/10/rolandgarros/). I put the direct link to the repo so that you might navigate there quickly to have a look.
 
-```{r}
+```{r, screenshot.force = FALSE, cache = FALSE}
+library("magrittr")
 hrbrpkgs %>%
-  dplyr::select(repo, description, created_at, updated_at) %>%
-  dplyr::arrange(repo) %>%
-  DT::datatable()
+  # thanks https://stackoverflow.com/questions/30901027/convert-a-column-of-text-urls-into-active-hyperlinks-in-shiny
+  dplyr::mutate(link = glue::glue("https://github.com/hrbrmstr/{repo}"),
+                link = glue::glue("<a href='{link}'>{link}</a>")) %>%
+  dplyr::mutate(created_at = lubridate::as_date(created_at),
+                updated_at = lubridate::as_date(updated_at)) %>%
+  dplyr::rename(package = repo) %>%
+  dplyr::select(package, description, created_at, updated_at, link) %>%
+  dplyr::arrange(package) %>%
+  DT::datatable(escape = FALSE)
 ```
+

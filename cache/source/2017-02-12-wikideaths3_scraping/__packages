@@ -1,0 +1,10 @@
+base
+xml2
+rvest
+dplyr
+purrr
+tidyr
+lazyeval
+tibble
+fuzzyjoin
+stringr

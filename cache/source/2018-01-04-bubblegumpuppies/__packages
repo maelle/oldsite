@@ -1,0 +1,9 @@
+base
+bindrcpp
+tidytext
+magrittr
+cleanNLP
+glue
+magick
+webshot
+scales
