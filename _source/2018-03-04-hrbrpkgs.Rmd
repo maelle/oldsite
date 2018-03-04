@@ -80,9 +80,8 @@ What can _you_ do with this list? Explore it to find the package(s) you didn't k
 
 <blockquote class="twitter-tweet" data-lang="ca"><p lang="en" dir="ltr">I’ve got a GH full of diverse <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> 📦 repos that all need tweaks/enhancements ranging from docs to ƒ()s. I’ll gladly help anyone — esp new PRers — contribute.</p>&mdash; hrbr&#39;Challa (@hrbrmstr) <a href="https://twitter.com/hrbrmstr/status/952162899472146432?ref_src=twsrc%5Etfw">13 de gener de 2018</a></blockquote>
 
-And as promised here is the table! I can have fancy `DT` tables on my blog thanks to the help of a [power](https://d4tagirl.com/) [couple](https://g3rv4.com/) from Montevideo, as explained in [the other post where I used that](http://www.masalmon.eu/2017/06/10/rolandgarros/). I put the direct link to the repo so that you might navigate there quickly to have a look.
-
-```{r, screenshot.force = FALSE, cache = FALSE}
+And as promised here is the table! 
+```{r, cache = FALSE}
 library("magrittr")
 hrbrpkgs %>%
   # thanks https://stackoverflow.com/questions/30901027/convert-a-column-of-text-urls-into-active-hyperlinks-in-shiny
@@ -93,6 +92,7 @@ hrbrpkgs %>%
   dplyr::rename(package = repo) %>%
   dplyr::select(package, description, created_at, updated_at, link) %>%
   dplyr::arrange(package) %>%
-  DT::datatable(escape = FALSE)
+  knitr::kable()
+
 ```
 
