@@ -25,6 +25,7 @@ my_tweets <- rtweet::get_timeline(user = "ma_salmon", n = 5000)
 my_satrday_tweets <- dplyr::filter(my_tweets,
                                    stringr::str_detect(text, "[sS]at[rR]day[cC]ape[tT]own"),
                                    !is_retweet)
+my_satrday_tweets <- dplyr::arrange(my_satrday_tweets, created_at)
 ```
 
 I got `r nrow(my_satrday_tweets)` tweets. 
@@ -64,6 +65,6 @@ purrr::map_chr(my_satrday_tweets$status_id, embed_tweet) %>%
 
 # And voilà!
 
-I'll include all tweets below, happy reading! Thanks again to the organizers, participants and sponsors of SatRday Cape Town for making it such an enjoyable experience!
+I'll include all tweets below (via a [Jekyll include](https://stackoverflow.com/questions/28030858/jekyll-include-html-partial-inside-markdown-file), with the html living in _includes, this is probably very hacky...), happy reading! Thanks again to the organizers, participants and sponsors of SatRday Cape Town for making it such an enjoyable experience!
 
 {% include satrdaycapetown.html %}
