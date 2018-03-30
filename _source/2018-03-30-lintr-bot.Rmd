@@ -83,4 +83,4 @@ I must say that besides the recently onboarded rOpenSci package `drake` by Will 
 
 What about you? Would you let that cute little bot help you?
 
-Note, a good package to improve code style automatically is [`styler`](https://github.com/r-lib/styler) by Kirill Müller and Lorenz Walthert, so if Lintr Bot has a lot to tell you, give `styler::style_package()` a try! 
+Note, a good package to improve code style automatically is [`styler`](https://github.com/r-lib/styler) by Kirill Müller and Lorenz Walthert, so if Lintr Bot has a lot to tell you, give `styler::style_pkg()` a try! 
