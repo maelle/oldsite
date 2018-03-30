@@ -37,7 +37,8 @@ Note that there's no way to filter for comments between a date range, well as fa
 lintrbot_act <- ghrecipes::spy(user = "lintr-bot", type = "PullRequest",
                                updated_after = "2017-03-30",
                                updated_before = "2018-03-30")
-
+lintrbot_act <- dplyr::filter(lintrbot_act,
+                              as.Date(created_at) >= anytime::anydate("2017-03-30"))
 ```
 
 We get `r nrow(lintrbot_act)` pull requests in one year! Lintr Bot is definitely _not_ a lazy little thing!
