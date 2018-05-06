@@ -18,7 +18,7 @@ I couldn't miss the fun Twitter hashtag [#BadStockPhotosOfMyJob](https://twitter
 
 ## Pexels metadata for the win
 
-Where to find information related to stock photos? In [two](http://www.masalmon.eu/2018/01/04/bubblegumpuppies/) [previous](http://www.masalmon.eu/2018/01/07/rainbowing/) blog posts of mine I used Pexels, a website providing CC0 pictures which is quite nice. My goal was to obtain the tags of stock photos of "data science": for instance if you look at [this picture](https://www.pexels.com/photo/black-laptop-beside-black-computer-mouse-inside-room-669996/), its tags are "business", "contemporary", "computer", etc. Pexels tags are very useful metadata, saving me the effort to parse picture titles for those who have one, or well the effort to use machine learning methods to analyse images.
+Where to find information related to stock photos? In [two](http://www.masalmon.eu/2018/01/04/bubblegumpuppies/) [previous](http://www.masalmon.eu/2018/01/07/rainbowing/) blog posts of mine I used Pexels, a website providing CC0 pictures which is quite nice. My goal was to obtain the titles and the tags of stock photos of "data science": for instance if you look at [this picture](https://www.pexels.com/photo/black-laptop-beside-black-computer-mouse-inside-room-669996/), its tags are "business", "contemporary", "computer", etc. Pexels tags are very useful metadata, saving me the effort to parse picture titles for those who have one, or well the effort to use machine learning methods to analyse images.
 
 ## Responsible webscraping
 
@@ -44,7 +44,7 @@ But Bob Rudis, who was patient and nice enough to answer my questions, told me t
 
 ```r
 limited_get <- ratelimitr::limit_rate(httr::GET,
-                                      ratelimitr::rate(3, 60),# not more than 200 times ah hour
+                                      ratelimitr::rate(200, 60*60),# not more than 200 times an hour
                                       ratelimitr::rate(1, 5))#not more than 1 time every 5 seconds
 ```
 
@@ -107,7 +107,56 @@ ds_stock <- tidyr::unnest(ds_stock, tags)
 ds_stock <- readr::read_csv("data/ds_stock.csv")
 ```
 
-I got `r length(unique(ds_stock$href))` unique pictures.
+I got `r length(unique(ds_stock$title))` unique pictures.
 
 # What's in a data science stock photo?
+
+Now that I have all this information at hand, I can describe data science stock photos!
+
+## Data science tags
+
+```{r}
+library("ggplot2")
+library("ggalt")
+library("hrbrthemes")
+tag_counts <- dplyr::count(ds_stock, tags, sort = TRUE)[1:10,]
+
+dplyr::mutate(tag_counts,
+              tags = reorder(tags, n)) %>% 
+ggplot() +
+  geom_lollipop(aes(tags, n),
+                size = 2, col = "salmon") +
+  hrbrthemes::theme_ipsum(base_size = 16,
+                          axis_title_size = 16) +
+  xlab("Tag") +
+  ggtitle("300 data science stock photos",
+          subtitle = "Most frequent tags. Src: https://www.pexels.com") +
+  coord_flip()
+```
+
+So the most common tags are data, technology, business and computer. Not too surprising! 
+
+## Data science scenes
+
+Now, let's have a look at _titles_ that are in general more descriptive of what's happening/present on the photo (i.e. is the computer near a cup of coffee or is someone working on it). For this, I shall use a technique described in [Julia Silge](https://juliasilge.com/)'s and [David Robinson](http://varianceexplained.org/)'s [Tidy text mining book](https://www.tidytextmining.com): "Counting and correlating pairs of words with the `widyr` package" described in [this section of the book](https://www.tidytextmining.com/ngrams.html#counting-and-correlating-pairs-of-words-with-the-widyr-package).
+
+I first tokenize by words within titles.
+
+```{r}
+library("magrittr")
+ds_stock_with_titles <- ds_stock %>%
+  dplyr::filter(!is.na(title)) %>%
+  dplyr::select(title) %>%
+  unique() 
+
+nrow(ds_stock_with_titles)
+
+ds_stock_words <- ds_stock_with_titles %>%
+  tidytext::unnest_tokens(word, title) 
+
+ds_stock_words %>%
+  head() %>%
+  knitr::kable()
+
+```
 
