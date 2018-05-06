@@ -1,0 +1,113 @@
+---
+layout: post
+title: "Bad Stock Photos of My Job? Data Science on Pexels"
+comments: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      cache = TRUE, eval = TRUE) 
+```
+
+I couldn't miss the fun Twitter hashtag [#BadStockPhotosOfMyJob](https://twitter.com/hashtag/BadStockPhotosOfMyJob?src=hash) thanks to a [tweet by Julia Silge](https://twitter.com/juliasilge/status/992952211201130497)  and [another one by Colin Fay](https://twitter.com/_ColinFay/status/993055416266436608). The latter inspired me to actually go and look for what makes a data science photo... What characterizes "data science" stock photos?
+
+<!--more-->
+
+# My (not bad) stock photo source
+
+## Pexels metadata for the win
+
+Where to find information related to stock photos? In [two](http://www.masalmon.eu/2018/01/04/bubblegumpuppies/) [previous](http://www.masalmon.eu/2018/01/07/rainbowing/) blog posts of mine I used Pexels, a website providing CC0 pictures which is quite nice. My goal was to obtain the tags of stock photos of "data science": for instance if you look at [this picture](https://www.pexels.com/photo/black-laptop-beside-black-computer-mouse-inside-room-669996/), its tags are "business", "contemporary", "computer", etc. Pexels tags are very useful metadata, saving me the effort to parse picture titles for those who have one, or well the effort to use machine learning methods to analyse images.
+
+## Responsible webscraping
+
+When researching this post I discovered that Pexels has an API, documented [here](https://www.pexels.com/api/documentation/) but this API does not get you tags associated to a pictures so only webscraping could get me what I needed.
+
+Webscraping is a powerful tool allowing one to [rectangle](https://speakerdeck.com/jennybc/data-rectangling) webpages but with great power comes great responsability. Being _able_ to scrape a webpage does not mean you are _allowed_ to. You could get sued or your IP could get blocked. I am from an expert but I often read [Bob Rudis' blog](https://rud.is/b/) where I learnt about rOpenSci's [`robotstxt` package](https://github.com/ropenscilabs/robotstxt) that does "robots.txt file parsing and checking for R" which in plain language means it checks for you what a webpage legally allows you to do. See below, 
+
+```{r}
+# how I'll find pictures
+robotstxt::paths_allowed("https://www.pexels.com/search")
+# where tags live
+robotstxt::paths_allowed("https://www.pexels.com/photo")
+```
+
+robots.txt files often also tell you how often you can hit a page by defining a "crawling delay". Sadly Pexels robots.txt doesn't:
+
+```{r}
+robotstxt::get_robotstxt("https://www.pexels.com")
+```
+
+But Bob Rudis, who was patient and nice enough to answer my questions, told me that I should probably respect the rate limit defined in [Pexels API docs](https://www.pexels.com/api/documentation/). "Do not abuse the API. The API is rate-limited to 200 requests per hour and 20,000 requests per month." As I recently explained in [a post on Locke Data's blog](https://itsalocke.com/blog/some-web-api-package-development-lessons-from-hibpwned/), these days to limit rate of a function I use [the very handy `ratelimitr` package](https://github.com/tarakc02/ratelimitr) by [Tarak Shah](https://tarakc02.github.io/).
+
+
+```r
+limited_get <- ratelimitr::limit_rate(httr::GET,
+                                      ratelimitr::rate(3, 60),# not more than 200 times ah hour
+                                      ratelimitr::rate(1, 5))#not more than 1 time every 5 seconds
+```
+
+## Elegant webscraping
+
+At the time of the two aforelinked blog posts I had used [`RSelenium`](https://github.com/ropensci/RSelenium) to scroll down and get the download link of many pictures, but Bob Rudis wrote [an elegant and cool alternative](https://gist.github.com/hrbrmstr/4cabe4af87bd2c5fe664b0b44a574366) using query parameters, on which I'll build in this post. 
+
+I first re-wrote the function to get all 15 pictures of each page of results.
+
+```r
+get_page <- function(num = 1, seed = 1) {
+  message(num)
+  limited_get(
+    url = "https://www.pexels.com/search/data science/",
+    query = list(
+      page=num,
+      seed=seed
+    )
+  ) -> res
+  
+  httr::stop_for_status(res)
+  
+  pg <- httr::content(res)
+  
+  tibble::tibble(
+    url = rvest::html_attr(rvest::html_nodes(pg, xpath = "//a[@class='js-photo-link']"), "href"),
+    title = rvest::html_attr(rvest::html_nodes(pg, xpath = "//a[@class='js-photo-link']"), "title"),
+    tags = purrr::map(url, get_tags)
+  )
+  
+} 
+
+```
+
+I re-wrote it because I needed the "href" and because it seems that the structure of each page changed a bit since the day on which the gist was written. To find out I had to write "a[@class='js-photo-link']" I inspected the source of a page.
+
+Then I wrote a function getting tags for each picture.
+
+```r
+get_tags <- function(url){
+  message(url)
+  url <- paste0("https://www.pexels.com", url)
+  res <- limited_get(url)
+  httr::stop_for_status(res)
+  pg <- httr::content(res)
+  nodes <- rvest::html_nodes(pg, xpath = '//a[@data-track-label="tag" ]')
+  rvest::html_text(nodes)
+}
+```
+And finally I got results for 20 pages. I chose 20 without thinking too much. It seemed enough for my needs, and each of these pages had pictures.
+
+```r
+ds_stock <- purrr::map_df(1:20, get_page)
+ds_stock <- unique(ds_stock)
+ds_stock <- tidyr::unnest(ds_stock, tags)
+```
+
+```{r, echo = FALSE}
+
+ds_stock <- readr::read_csv("data/ds_stock.csv")
+```
+
+I got `r length(unique(ds_stock$href))` unique pictures.
+
+# What's in a data science stock photo?
+
